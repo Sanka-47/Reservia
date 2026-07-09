@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: reservia-db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: reservia
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: reservia-api
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=password
+      - DB_DATABASE=reservia
+      - JWT_SECRET=super_secret_jwt_key_change_me
+      - JWT_REFRESH_SECRET=super_secret_refresh_jwt_key_change_me
+      - GOOGLE_CLIENT_ID=your_google_client_id.apps.googleusercontent.com
+    depends_on:
+      - postgres
+
+volumes:
+  postgres_data:
