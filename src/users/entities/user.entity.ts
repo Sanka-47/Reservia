@@ -15,7 +15,7 @@ export class User {
   googleId: string;
 
   @Column({ nullable: true })
-  refreshTokenHash: string;
+  refreshTokenHash: string | null;
 
   @CreateDateColumn()
   createdAt: Date;
