@@ -14,7 +14,7 @@ export class User {
   @Column({ unique: true })
   googleId: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   refreshTokenHash: string | null;
 
   @CreateDateColumn()
