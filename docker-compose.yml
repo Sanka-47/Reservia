@@ -16,7 +16,7 @@ services:
 
   api:
     build:
-      context: .
+      context: ./backend
       dockerfile: Dockerfile
     container_name: reservia-api
     restart: always
@@ -35,6 +35,19 @@ services:
       - GOOGLE_CLIENT_ID=your_google_client_id.apps.googleusercontent.com
     depends_on:
       - postgres
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: reservia-frontend
+    restart: always
+    ports:
+      - "3001:3001"
+    environment:
+      - VITE_API_URL=http://localhost:3000/api
+    depends_on:
+      - api
 
 volumes:
   postgres_data:
