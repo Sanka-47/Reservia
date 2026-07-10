@@ -46,6 +46,29 @@ export const AdminPortal: React.FC = () => {
   const [serviceIsActive, setServiceIsActive] = useState(true);
   const [serviceError, setServiceError] = useState('');
 
+  // Services search, sort, clear states
+  const [serviceSearchVal, setServiceSearchVal] = useState('');
+  const [serviceSearchQuery, setServiceSearchQuery] = useState('');
+  const [serviceSortBy, setServiceSortBy] = useState<'none' | 'price-asc' | 'price-desc'>('none');
+
+  // Compute filtered & sorted services
+  const filteredAndSortedServices = React.useMemo(() => {
+    return services
+      .filter(service => {
+        if (!serviceSearchQuery) return true;
+        const query = serviceSearchQuery.toLowerCase();
+        return (
+          service.title.toLowerCase().includes(query) ||
+          service.description.toLowerCase().includes(query)
+        );
+      })
+      .sort((a, b) => {
+        if (serviceSortBy === 'price-asc') return a.price - b.price;
+        if (serviceSortBy === 'price-desc') return b.price - a.price;
+        return 0;
+      });
+  }, [services, serviceSearchQuery, serviceSortBy]);
+
   // Bookings states
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [bookingsTotal, setBookingsTotal] = useState(0);
@@ -410,6 +433,58 @@ export const AdminPortal: React.FC = () => {
             </button>
           </div>
 
+          {/* Search & Sort Controls */}
+          <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', marginBottom: '24px' }}>
+            <div style={{ flex: 1, minWidth: '280px', display: 'flex', gap: '8px' }}>
+              <input 
+                type="text" 
+                className="form-input" 
+                placeholder="Search services by title or description..." 
+                value={serviceSearchVal}
+                onChange={e => setServiceSearchVal(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter') {
+                    setServiceSearchQuery(serviceSearchVal);
+                  }
+                }}
+              />
+              <button 
+                type="button"
+                className="btn btn-primary"
+                onClick={() => {
+                  setServiceSearchQuery(serviceSearchVal);
+                }}
+              >
+                🔍 Search
+              </button>
+            </div>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <select 
+                className="form-input" 
+                style={{ width: '200px' }}
+                value={serviceSortBy}
+                onChange={e => setServiceSortBy(e.target.value as any)}
+              >
+                <option value="none">Sort by: Default</option>
+                <option value="price-asc">Price: Low to High</option>
+                <option value="price-desc">Price: High to Low</option>
+              </select>
+              {(serviceSearchQuery || serviceSortBy !== 'none') && (
+                <button 
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => {
+                    setServiceSearchVal('');
+                    setServiceSearchQuery('');
+                    setServiceSortBy('none');
+                  }}
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+          </div>
+
           {/* Services list table */}
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
@@ -424,31 +499,39 @@ export const AdminPortal: React.FC = () => {
                 </tr>
               </thead>
               <tbody>
-                {services.map(service => (
-                  <tr key={service.id} style={{ borderBottom: '1px solid var(--border-color)', fontSize: '0.9rem' }}>
-                    <td style={{ padding: '16px 12px', fontWeight: '600', color: 'var(--text-main)' }}>{service.title}</td>
-                    <td style={{ padding: '12px', maxWidth: '300px', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
-                      {service.description}
-                    </td>
-                    <td style={{ padding: '12px' }}>🕒 {service.duration} mins</td>
-                    <td style={{ padding: '12px', fontWeight: 'bold', color: 'var(--accent)' }}>${service.price.toFixed(2)}</td>
-                    <td style={{ padding: '12px' }}>
-                      <span className={`badge ${service.isActive ? 'badge-completed' : 'badge-cancelled'}`}>
-                        {service.isActive ? 'Active' : 'Inactive'}
-                      </span>
-                    </td>
-                    <td style={{ padding: '12px', textAlign: 'right' }}>
-                      <div style={{ display: 'flex', gap: '6px', justifyContent: 'end' }}>
-                        <button className="btn btn-secondary btn-small" onClick={() => handleOpenEditService(service)}>
-                          Edit
-                        </button>
-                        <button className="btn btn-danger btn-small" onClick={() => handleDeleteService(service.id)}>
-                          Delete
-                        </button>
-                      </div>
+                {filteredAndSortedServices.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} style={{ padding: '40px', textAlign: 'center', color: 'var(--text-dark)' }}>
+                      No services matching your criteria were found.
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  filteredAndSortedServices.map(service => (
+                    <tr key={service.id} style={{ borderBottom: '1px solid var(--border-color)', fontSize: '0.9rem' }}>
+                      <td style={{ padding: '16px 12px', fontWeight: '600', color: 'var(--text-main)' }}>{service.title}</td>
+                      <td style={{ padding: '12px', maxWidth: '300px', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
+                        {service.description}
+                      </td>
+                      <td style={{ padding: '12px' }}>🕒 {service.duration} mins</td>
+                      <td style={{ padding: '12px', fontWeight: 'bold', color: 'var(--accent)' }}>${service.price.toFixed(2)}</td>
+                      <td style={{ padding: '12px' }}>
+                        <span className={`badge ${service.isActive ? 'badge-completed' : 'badge-cancelled'}`}>
+                          {service.isActive ? 'Active' : 'Inactive'}
+                        </span>
+                      </td>
+                      <td style={{ padding: '12px', textAlign: 'right' }}>
+                        <div style={{ display: 'flex', gap: '6px', justifyContent: 'end' }}>
+                          <button className="btn btn-secondary btn-small" onClick={() => handleOpenEditService(service)}>
+                            Edit
+                          </button>
+                          <button className="btn btn-danger btn-small" onClick={() => handleDeleteService(service.id)}>
+                            Delete
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
