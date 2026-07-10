@@ -1,5 +1,6 @@
 import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
 import { Service } from '../../services/entities/service.entity';
+import { User } from '../../users/entities/user.entity';
 
 export enum BookingStatus {
   PENDING = 'PENDING',
@@ -28,6 +29,13 @@ export class Booking {
   @ManyToOne(() => Service, { onDelete: 'RESTRICT', eager: false })
   @JoinColumn({ name: 'serviceId' })
   service: Service;
+
+  @Column()
+  userId: string;
+
+  @ManyToOne(() => User, { onDelete: 'CASCADE', eager: false })
+  @JoinColumn({ name: 'userId' })
+  user: User;
 
   @Column({ type: 'date' })
   bookingDate: string; // YYYY-MM-DD

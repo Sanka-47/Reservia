@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../utils/api';
+import { useAuth } from '../context/AuthContext';
 
 interface Service {
   id: string;
@@ -20,7 +21,12 @@ interface BookingResponse {
   };
 }
 
-export const CustomerPortal: React.FC = () => {
+interface CustomerPortalProps {
+  onRequireLogin: () => void;
+}
+
+export const CustomerPortal: React.FC<CustomerPortalProps> = ({ onRequireLogin }) => {
+  const { user } = useAuth();
   const [services, setServices] = useState<Service[]>([]);
   const [selectedService, setSelectedService] = useState<Service | null>(null);
   const [loading, setLoading] = useState(true);
@@ -54,7 +60,6 @@ export const CustomerPortal: React.FC = () => {
   const fetchServices = async () => {
     try {
       const response = await api.get<Service[]>('/services');
-      // Only show active services to customers
       setServices(response.data.filter(s => s.isActive));
     } catch (e) {
       console.error('Failed to load services:', e);
@@ -64,13 +69,22 @@ export const CustomerPortal: React.FC = () => {
   };
 
   const handleOpenBooking = (service: Service) => {
+    // ENFORCE rule: Login required to book services
+    if (!user) {
+      onRequireLogin();
+      return;
+    }
+
     setSelectedService(service);
     setBookingSuccess(null);
     setSubmitError('');
-    // Clear form
-    setName('');
-    setEmail('');
-    setPhone('');
+    
+    // Auto-populate customer fields from logged-in user profile
+    setName(user.name);
+    setEmail(user.email);
+    setPhone(user.phoneNumber);
+    
+    // Clear slot/notes
     setDate('');
     setTime('');
     setNotes('');
@@ -161,7 +175,7 @@ export const CustomerPortal: React.FC = () => {
                 🕒 {service.duration} mins
               </span>
               <button className="btn btn-primary btn-small" onClick={() => handleOpenBooking(service)}>
-                Book Now
+                {user ? 'Book Now' : 'Sign In to Book'}
               </button>
             </div>
           </div>
@@ -169,7 +183,7 @@ export const CustomerPortal: React.FC = () => {
       </div>
 
       {/* Booking Form Modal */}
-      {selectedService && (
+      {selectedService && user && (
         <div className="modal-overlay" onClick={() => setSelectedService(null)}>
           <div className="modal-content glass-panel" style={{ padding: '32px' }} onClick={(e) => e.stopPropagation()}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>

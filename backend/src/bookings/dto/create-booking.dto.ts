@@ -2,20 +2,20 @@ import { IsNotEmpty, IsString, IsEmail, IsUUID, IsOptional, Matches } from 'clas
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateBookingDto {
-  @ApiProperty({ description: 'Customer full name', example: 'Alice Smith' })
-  @IsNotEmpty()
+  @ApiProperty({ description: 'Customer full name (Auto-populated if logged in)', example: 'Alice Smith', required: false })
+  @IsOptional()
   @IsString()
-  customerName: string;
+  customerName?: string;
 
-  @ApiProperty({ description: 'Customer email address', example: 'alice@example.com' })
-  @IsNotEmpty()
+  @ApiProperty({ description: 'Customer email address (Auto-populated if logged in)', example: 'alice@example.com', required: false })
+  @IsOptional()
   @IsEmail()
-  customerEmail: string;
+  customerEmail?: string;
 
-  @ApiProperty({ description: 'Customer phone number', example: '+1234567890' })
-  @IsNotEmpty()
+  @ApiProperty({ description: 'Customer phone number (Auto-populated if logged in)', example: '+1234567890', required: false })
+  @IsOptional()
   @IsString()
-  customerPhone: string;
+  customerPhone?: string;
 
   @ApiProperty({ description: 'ID of the service being booked', example: '85e78c8c-1e24-4f81-9b4c-9f899e4f5a3b' })
   @IsNotEmpty()

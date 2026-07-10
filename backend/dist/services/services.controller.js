@@ -18,13 +18,17 @@ const services_service_1 = require("./services.service");
 const create_service_dto_1 = require("./dto/create-service.dto");
 const update_service_dto_1 = require("./dto/update-service.dto");
 const jwt_auth_guard_1 = require("../auth/guards/jwt-auth.guard");
+const user_entity_1 = require("../users/entities/user.entity");
 const swagger_1 = require("@nestjs/swagger");
 let ServicesController = class ServicesController {
     servicesService;
     constructor(servicesService) {
         this.servicesService = servicesService;
     }
-    create(createServiceDto) {
+    create(createServiceDto, req) {
+        if (req.user.role !== user_entity_1.UserRole.ADMIN) {
+            throw new common_1.ForbiddenException('Only administrators can manage services');
+        }
         return this.servicesService.create(createServiceDto);
     }
     findAll() {
@@ -33,10 +37,16 @@ let ServicesController = class ServicesController {
     findOne(id) {
         return this.servicesService.findOne(id);
     }
-    update(id, updateServiceDto) {
+    update(id, updateServiceDto, req) {
+        if (req.user.role !== user_entity_1.UserRole.ADMIN) {
+            throw new common_1.ForbiddenException('Only administrators can manage services');
+        }
         return this.servicesService.update(id, updateServiceDto);
     }
-    remove(id) {
+    remove(id, req) {
+        if (req.user.role !== user_entity_1.UserRole.ADMIN) {
+            throw new common_1.ForbiddenException('Only administrators can manage services');
+        }
         return this.servicesService.remove(id);
     }
 };
@@ -46,13 +56,15 @@ __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, swagger_1.ApiBearerAuth)('JWT-auth'),
     (0, common_1.HttpCode)(common_1.HttpStatus.CREATED),
-    (0, swagger_1.ApiOperation)({ summary: 'Create a new service (Authenticated)' }),
+    (0, swagger_1.ApiOperation)({ summary: 'Create a new service (Admin Only)' }),
     (0, swagger_1.ApiResponse)({ status: 201, description: 'Service successfully created.' }),
     (0, swagger_1.ApiResponse)({ status: 400, description: 'Invalid input data.' }),
     (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized.' }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Forbidden. Admin role required.' }),
     __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.Req)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [create_service_dto_1.CreateServiceDto]),
+    __metadata("design:paramtypes", [create_service_dto_1.CreateServiceDto, Object]),
     __metadata("design:returntype", void 0)
 ], ServicesController.prototype, "create", null);
 __decorate([
@@ -78,16 +90,18 @@ __decorate([
     (0, common_1.Patch)(':id'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, swagger_1.ApiBearerAuth)('JWT-auth'),
-    (0, swagger_1.ApiOperation)({ summary: 'Update a service by ID (Authenticated)' }),
+    (0, swagger_1.ApiOperation)({ summary: 'Update a service by ID (Admin Only)' }),
     (0, swagger_1.ApiParam)({ name: 'id', description: 'The service UUID' }),
     (0, swagger_1.ApiResponse)({ status: 200, description: 'Service successfully updated.' }),
     (0, swagger_1.ApiResponse)({ status: 400, description: 'Invalid input data.' }),
     (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized.' }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Forbidden. Admin role required.' }),
     (0, swagger_1.ApiResponse)({ status: 404, description: 'Service not found.' }),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)()),
+    __param(2, (0, common_1.Req)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, update_service_dto_1.UpdateServiceDto]),
+    __metadata("design:paramtypes", [String, update_service_dto_1.UpdateServiceDto, Object]),
     __metadata("design:returntype", void 0)
 ], ServicesController.prototype, "update", null);
 __decorate([
@@ -95,18 +109,20 @@ __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, swagger_1.ApiBearerAuth)('JWT-auth'),
     (0, common_1.HttpCode)(common_1.HttpStatus.NO_CONTENT),
-    (0, swagger_1.ApiOperation)({ summary: 'Delete a service by ID (Authenticated)' }),
+    (0, swagger_1.ApiOperation)({ summary: 'Delete a service by ID (Admin Only)' }),
     (0, swagger_1.ApiParam)({ name: 'id', description: 'The service UUID' }),
     (0, swagger_1.ApiResponse)({ status: 204, description: 'Service successfully deleted.' }),
     (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized.' }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Forbidden. Admin role required.' }),
     (0, swagger_1.ApiResponse)({ status: 404, description: 'Service not found.' }),
     (0, swagger_1.ApiResponse)({
         status: 400,
         description: 'Bad Request: Service cannot be deleted because it is referenced by existing bookings.',
     }),
     __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Req)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", void 0)
 ], ServicesController.prototype, "remove", null);
 exports.ServicesController = ServicesController = __decorate([

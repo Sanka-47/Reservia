@@ -18,8 +18,8 @@ export class UsersService {
     return this.usersRepository.findOne({ where: { email } });
   }
 
-  async findOneByGoogleId(googleId: string): Promise<User | null> {
-    return this.usersRepository.findOne({ where: { googleId } });
+  async findOneByUsername(username: string): Promise<User | null> {
+    return this.usersRepository.findOne({ where: { username } });
   }
 
   async create(userData: Partial<User>): Promise<User> {

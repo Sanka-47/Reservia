@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Booking = exports.BookingStatus = void 0;
 const typeorm_1 = require("typeorm");
 const service_entity_1 = require("../../services/entities/service.entity");
+const user_entity_1 = require("../../users/entities/user.entity");
 var BookingStatus;
 (function (BookingStatus) {
     BookingStatus["PENDING"] = "PENDING";
@@ -26,6 +27,8 @@ let Booking = class Booking {
     customerPhone;
     serviceId;
     service;
+    userId;
+    user;
     bookingDate;
     bookingTime;
     status;
@@ -59,6 +62,15 @@ __decorate([
     (0, typeorm_1.JoinColumn)({ name: 'serviceId' }),
     __metadata("design:type", service_entity_1.Service)
 ], Booking.prototype, "service", void 0);
+__decorate([
+    (0, typeorm_1.Column)(),
+    __metadata("design:type", String)
+], Booking.prototype, "userId", void 0);
+__decorate([
+    (0, typeorm_1.ManyToOne)(() => user_entity_1.User, { onDelete: 'CASCADE', eager: false }),
+    (0, typeorm_1.JoinColumn)({ name: 'userId' }),
+    __metadata("design:type", user_entity_1.User)
+], Booking.prototype, "user", void 0);
 __decorate([
     (0, typeorm_1.Column)({ type: 'date' }),
     __metadata("design:type", String)

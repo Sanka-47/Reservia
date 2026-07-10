@@ -17,6 +17,7 @@ const common_1 = require("@nestjs/common");
 const bookings_service_1 = require("./bookings.service");
 const create_booking_dto_1 = require("./dto/create-booking.dto");
 const update_booking_status_dto_1 = require("./dto/update-booking-status.dto");
+const update_booking_dto_1 = require("./dto/update-booking.dto");
 const get_bookings_filter_dto_1 = require("./dto/get-bookings-filter.dto");
 const jwt_auth_guard_1 = require("../auth/guards/jwt-auth.guard");
 const swagger_1 = require("@nestjs/swagger");
@@ -25,92 +26,124 @@ let BookingsController = class BookingsController {
     constructor(bookingsService) {
         this.bookingsService = bookingsService;
     }
-    create(createBookingDto) {
-        return this.bookingsService.create(createBookingDto);
+    create(createBookingDto, req) {
+        return this.bookingsService.create(createBookingDto, req.user);
     }
-    findAll(filterDto) {
-        return this.bookingsService.findAll(filterDto);
+    findAll(filterDto, req) {
+        return this.bookingsService.findAll(filterDto, req.user);
     }
-    findOne(id) {
-        return this.bookingsService.findOne(id);
+    findOne(id, req) {
+        return this.bookingsService.findOne(id, req.user);
     }
-    updateStatus(id, updateBookingStatusDto) {
-        return this.bookingsService.updateStatus(id, updateBookingStatusDto);
+    updateStatus(id, updateBookingStatusDto, req) {
+        return this.bookingsService.updateStatus(id, updateBookingStatusDto, req.user);
     }
-    cancel(id) {
-        return this.bookingsService.cancel(id);
+    cancel(id, req) {
+        return this.bookingsService.cancel(id, req.user);
+    }
+    update(id, updateBookingDto, req) {
+        return this.bookingsService.update(id, updateBookingDto, req.user);
     }
 };
 exports.BookingsController = BookingsController;
 __decorate([
     (0, common_1.Post)(),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, swagger_1.ApiBearerAuth)('JWT-auth'),
     (0, common_1.HttpCode)(common_1.HttpStatus.CREATED),
-    (0, swagger_1.ApiOperation)({ summary: 'Create a new service booking (Public / Customer)' }),
+    (0, swagger_1.ApiOperation)({ summary: 'Create a new service booking (Authenticated Customer)' }),
     (0, swagger_1.ApiResponse)({ status: 201, description: 'Booking successfully created.' }),
-    (0, swagger_1.ApiResponse)({ status: 400, description: 'Invalid booking details or date is in the past.' }),
+    (0, swagger_1.ApiResponse)({ status: 400, description: 'Invalid details or date is in the past.' }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized.' }),
     (0, swagger_1.ApiResponse)({ status: 404, description: 'Service not found.' }),
-    (0, swagger_1.ApiResponse)({ status: 409, description: 'Service timeslot already booked.' }),
+    (0, swagger_1.ApiResponse)({ status: 409, description: 'Timeslot already booked.' }),
     __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.Req)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [create_booking_dto_1.CreateBookingDto]),
+    __metadata("design:paramtypes", [create_booking_dto_1.CreateBookingDto, Object]),
     __metadata("design:returntype", void 0)
 ], BookingsController.prototype, "create", null);
 __decorate([
     (0, common_1.Get)(),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, swagger_1.ApiBearerAuth)('JWT-auth'),
-    (0, swagger_1.ApiOperation)({ summary: 'Get all bookings with search, filters, and pagination (Authenticated)' }),
+    (0, swagger_1.ApiOperation)({ summary: 'Get bookings list. Customers see their own; Admins see all. (Authenticated)' }),
     (0, swagger_1.ApiResponse)({ status: 200, description: 'Return paginated bookings list.' }),
     (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized.' }),
     __param(0, (0, common_1.Query)()),
+    __param(1, (0, common_1.Req)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [get_bookings_filter_dto_1.GetBookingsFilterDto]),
+    __metadata("design:paramtypes", [get_bookings_filter_dto_1.GetBookingsFilterDto, Object]),
     __metadata("design:returntype", void 0)
 ], BookingsController.prototype, "findAll", null);
 __decorate([
     (0, common_1.Get)(':id'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, swagger_1.ApiBearerAuth)('JWT-auth'),
-    (0, swagger_1.ApiOperation)({ summary: 'Get a specific booking by ID (Authenticated)' }),
+    (0, swagger_1.ApiOperation)({ summary: 'Get a specific booking details (Authenticated owner or admin)' }),
     (0, swagger_1.ApiParam)({ name: 'id', description: 'The booking UUID' }),
     (0, swagger_1.ApiResponse)({ status: 200, description: 'Return the booking details.' }),
     (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized.' }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Forbidden. No ownership.' }),
     (0, swagger_1.ApiResponse)({ status: 404, description: 'Booking not found.' }),
     __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Req)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", void 0)
 ], BookingsController.prototype, "findOne", null);
 __decorate([
     (0, common_1.Patch)(':id/status'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, swagger_1.ApiBearerAuth)('JWT-auth'),
-    (0, swagger_1.ApiOperation)({ summary: 'Update a booking status (Authenticated)' }),
+    (0, swagger_1.ApiOperation)({ summary: 'Update a booking status (Authenticated owner or admin)' }),
     (0, swagger_1.ApiParam)({ name: 'id', description: 'The booking UUID' }),
     (0, swagger_1.ApiResponse)({ status: 200, description: 'Booking status successfully updated.' }),
     (0, swagger_1.ApiResponse)({ status: 400, description: 'Invalid request or invalid status transition.' }),
     (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized.' }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Forbidden. No ownership.' }),
     (0, swagger_1.ApiResponse)({ status: 404, description: 'Booking not found.' }),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)()),
+    __param(2, (0, common_1.Req)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, update_booking_status_dto_1.UpdateBookingStatusDto]),
+    __metadata("design:paramtypes", [String, update_booking_status_dto_1.UpdateBookingStatusDto, Object]),
     __metadata("design:returntype", void 0)
 ], BookingsController.prototype, "updateStatus", null);
 __decorate([
     (0, common_1.Patch)(':id/cancel'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, swagger_1.ApiBearerAuth)('JWT-auth'),
-    (0, swagger_1.ApiOperation)({ summary: 'Cancel a booking (Authenticated)' }),
+    (0, swagger_1.ApiOperation)({ summary: 'Cancel a booking (Authenticated owner or admin)' }),
     (0, swagger_1.ApiParam)({ name: 'id', description: 'The booking UUID' }),
     (0, swagger_1.ApiResponse)({ status: 200, description: 'Booking successfully cancelled.' }),
     (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized.' }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Forbidden. No ownership.' }),
     (0, swagger_1.ApiResponse)({ status: 404, description: 'Booking not found.' }),
     __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Req)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", void 0)
 ], BookingsController.prototype, "cancel", null);
+__decorate([
+    (0, common_1.Patch)(':id'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, swagger_1.ApiBearerAuth)('JWT-auth'),
+    (0, swagger_1.ApiOperation)({ summary: 'Reschedule or edit a booking (Authenticated owner or admin)' }),
+    (0, swagger_1.ApiParam)({ name: 'id', description: 'The booking UUID' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Booking successfully updated/rescheduled.' }),
+    (0, swagger_1.ApiResponse)({ status: 400, description: 'Invalid date/time or status constraints.' }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized.' }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Forbidden. No ownership.' }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Booking not found.' }),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)()),
+    __param(2, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, update_booking_dto_1.UpdateBookingDto, Object]),
+    __metadata("design:returntype", void 0)
+], BookingsController.prototype, "update", null);
 exports.BookingsController = BookingsController = __decorate([
     (0, swagger_1.ApiTags)('Bookings'),
     (0, common_1.Controller)('bookings'),

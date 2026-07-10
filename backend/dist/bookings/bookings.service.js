@@ -18,6 +18,7 @@ const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const booking_entity_1 = require("./entities/booking.entity");
 const services_service_1 = require("../services/services.service");
+const user_entity_1 = require("../users/entities/user.entity");
 let BookingsService = class BookingsService {
     bookingsRepository;
     servicesService;
@@ -25,7 +26,7 @@ let BookingsService = class BookingsService {
         this.bookingsRepository = bookingsRepository;
         this.servicesService = servicesService;
     }
-    async create(createBookingDto) {
+    async create(createBookingDto, user) {
         const service = await this.servicesService.findOne(createBookingDto.serviceId);
         if (!service.isActive) {
             throw new common_1.BadRequestException(`Service "${service.title}" is currently inactive`);
@@ -45,20 +46,30 @@ let BookingsService = class BookingsService {
         if (duplicate) {
             throw new common_1.ConflictException(`This timeslot (${createBookingDto.bookingTime}) is already booked for this service on ${createBookingDto.bookingDate}`);
         }
+        const customerName = createBookingDto.customerName || user.name;
+        const customerEmail = createBookingDto.customerEmail || user.email;
+        const customerPhone = createBookingDto.customerPhone || user.phoneNumber;
         const booking = this.bookingsRepository.create({
             ...createBookingDto,
+            customerName,
+            customerEmail,
+            customerPhone,
+            userId: user.id,
             status: booking_entity_1.BookingStatus.PENDING,
         });
         const savedBooking = await this.bookingsRepository.save(booking);
         savedBooking.service = service;
         return savedBooking;
     }
-    async findAll(filterDto) {
+    async findAll(filterDto, user) {
         const { page = 1, limit = 10, status, serviceId, search } = filterDto;
         const skip = (page - 1) * limit;
         const query = this.bookingsRepository
             .createQueryBuilder('booking')
             .leftJoinAndSelect('booking.service', 'service');
+        if (user.role === user_entity_1.UserRole.CUSTOMER) {
+            query.andWhere('booking.userId = :userId', { userId: user.id });
+        }
         if (status) {
             query.andWhere('booking.status = :status', { status });
         }
@@ -82,7 +93,7 @@ let BookingsService = class BookingsService {
             totalPages: Math.ceil(total / limit),
         };
     }
-    async findOne(id) {
+    async findOne(id, user) {
         const booking = await this.bookingsRepository.findOne({
             where: { id },
             relations: { service: true },
@@ -90,23 +101,64 @@ let BookingsService = class BookingsService {
         if (!booking) {
             throw new common_1.NotFoundException(`Booking with ID "${id}" not found`);
         }
+        if (user.role !== user_entity_1.UserRole.ADMIN && booking.userId !== user.id) {
+            throw new common_1.ForbiddenException('You do not have permission to view this booking');
+        }
         return booking;
     }
-    async updateStatus(id, updateBookingStatusDto) {
+    async updateStatus(id, updateBookingStatusDto, user) {
         const { status } = updateBookingStatusDto;
-        const booking = await this.findOne(id);
+        const booking = await this.findOne(id, user);
         if (booking.status === booking_entity_1.BookingStatus.CANCELLED && status === booking_entity_1.BookingStatus.COMPLETED) {
             throw new common_1.BadRequestException('Cancelled bookings cannot be marked as completed');
         }
         booking.status = status;
         return this.bookingsRepository.save(booking);
     }
-    async cancel(id) {
-        const booking = await this.findOne(id);
+    async cancel(id, user) {
+        const booking = await this.findOne(id, user);
         if (booking.status === booking_entity_1.BookingStatus.CANCELLED) {
             return booking;
         }
         booking.status = booking_entity_1.BookingStatus.CANCELLED;
+        return this.bookingsRepository.save(booking);
+    }
+    async update(id, updateBookingDto, user) {
+        const booking = await this.findOne(id, user);
+        if (booking.status === booking_entity_1.BookingStatus.CANCELLED || booking.status === booking_entity_1.BookingStatus.COMPLETED) {
+            throw new common_1.BadRequestException('Cannot edit cancelled or completed bookings');
+        }
+        if (updateBookingDto.bookingDate || updateBookingDto.bookingTime) {
+            const date = updateBookingDto.bookingDate || booking.bookingDate;
+            const time = updateBookingDto.bookingTime || booking.bookingTime;
+            const todayStr = new Date().toLocaleDateString('en-CA');
+            if (date < todayStr) {
+                throw new common_1.BadRequestException('Rescheduled date cannot be in the past');
+            }
+            const duplicate = await this.bookingsRepository.findOne({
+                where: {
+                    id: (0, typeorm_2.Not)(id),
+                    serviceId: booking.serviceId,
+                    bookingDate: date,
+                    bookingTime: time,
+                    status: (0, typeorm_2.Not)(booking_entity_1.BookingStatus.CANCELLED),
+                },
+            });
+            if (duplicate) {
+                throw new common_1.ConflictException('The selected timeslot is already booked');
+            }
+            booking.bookingDate = date;
+            booking.bookingTime = time;
+        }
+        if (updateBookingDto.notes !== undefined) {
+            booking.notes = updateBookingDto.notes;
+        }
+        if (updateBookingDto.customerName)
+            booking.customerName = updateBookingDto.customerName;
+        if (updateBookingDto.customerEmail)
+            booking.customerEmail = updateBookingDto.customerEmail;
+        if (updateBookingDto.customerPhone)
+            booking.customerPhone = updateBookingDto.customerPhone;
         return this.bookingsRepository.save(booking);
     }
 };

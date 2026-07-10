@@ -1,40 +1,40 @@
 import { Controller, Post, Body, UseGuards, Req, HttpCode, HttpStatus } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { GoogleTokenDto } from './dto/google-token.dto';
+import { RegisterUserDto } from './dto/register-user.dto';
+import { LoginUserDto } from './dto/login-user.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiBody } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 
 @ApiTags('Authentication')
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @Post('register/google')
+  @Post('register')
   @HttpCode(HttpStatus.CREATED)
-  @ApiOperation({ summary: 'Register a new administrator using Google ID Token' })
-  @ApiResponse({ status: 201, description: 'User successfully registered and authenticated.' })
-  @ApiResponse({ status: 400, description: 'Invalid token or token verification failed.' })
-  @ApiResponse({ status: 409, description: 'User already exists.' })
-  registerGoogle(@Body() googleTokenDto: GoogleTokenDto) {
-    return this.authService.registerGoogle(googleTokenDto.token);
+  @ApiOperation({ summary: 'Register a new customer account' })
+  @ApiResponse({ status: 201, description: 'User successfully registered.' })
+  @ApiResponse({ status: 400, description: 'Invalid input details.' })
+  @ApiResponse({ status: 409, description: 'Username or email already exists.' })
+  register(@Body() registerUserDto: RegisterUserDto) {
+    return this.authService.register(registerUserDto);
   }
 
-  @Post('login/google')
+  @Post('login')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Log in an administrator using Google ID Token' })
+  @ApiOperation({ summary: 'Log in using username and password' })
   @ApiResponse({ status: 200, description: 'User successfully authenticated.' })
-  @ApiResponse({ status: 400, description: 'Invalid token or token verification failed.' })
-  @ApiResponse({ status: 401, description: 'User not registered.' })
-  loginGoogle(@Body() googleTokenDto: GoogleTokenDto) {
-    return this.authService.loginGoogle(googleTokenDto.token);
+  @ApiResponse({ status: 401, description: 'Invalid credentials.' })
+  login(@Body() loginUserDto: LoginUserDto) {
+    return this.authService.login(loginUserDto.username, loginUserDto.password);
   }
 
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Refresh JWT Access and Refresh Tokens' })
-  @ApiResponse({ status: 200, description: 'New token pair generated successfully.' })
-  @ApiResponse({ status: 401, description: 'Invalid or expired refresh token.' })
+  @ApiResponse({ status: 200, description: 'New token pair generated.' })
+  @ApiResponse({ status: 401, description: 'Invalid refresh token.' })
   refreshTokens(@Body() refreshTokenDto: RefreshTokenDto) {
     return this.authService.refreshTokens(refreshTokenDto.refreshToken);
   }
@@ -43,7 +43,7 @@ export class AuthController {
   @Post('logout')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ summary: 'Log out the authenticated user and invalidate their refresh token' })
+  @ApiOperation({ summary: 'Log out the authenticated user' })
   @ApiResponse({ status: 200, description: 'Successfully logged out.' })
   @ApiResponse({ status: 401, description: 'Unauthorized.' })
   logout(@Req() req: any) {
