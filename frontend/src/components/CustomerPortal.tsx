@@ -204,9 +204,10 @@ export const CustomerPortal: React.FC<CustomerPortalProps> = ({ onRequireLogin }
             🔍 Search
           </button>
         </div>
-        <div style={{ width: '200px' }}>
+        <div style={{ display: 'flex', gap: '8px' }}>
           <select 
             className="form-input" 
+            style={{ width: '200px' }}
             value={sortBy}
             onChange={e => setSortBy(e.target.value as any)}
           >
@@ -214,6 +215,19 @@ export const CustomerPortal: React.FC<CustomerPortalProps> = ({ onRequireLogin }
             <option value="price-asc">Price: Low to High</option>
             <option value="price-desc">Price: High to Low</option>
           </select>
+          {(searchQuery || sortBy !== 'none') && (
+            <button 
+              type="button"
+              className="btn btn-secondary"
+              onClick={() => {
+                setSearchVal('');
+                setSearchQuery('');
+                setSortBy('none');
+              }}
+            >
+              Clear
+            </button>
+          )}
         </div>
       </div>
 

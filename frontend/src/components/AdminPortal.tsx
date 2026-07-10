@@ -277,6 +277,20 @@ export const AdminPortal: React.FC = () => {
                 <option value="COMPLETED">Completed</option>
                 <option value="CANCELLED">Cancelled</option>
               </select>
+              {(searchQuery || statusFilter) && (
+                <button 
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => {
+                    setSearchVal('');
+                    setSearchQuery('');
+                    setStatusFilter('');
+                    setBookingsPage(1);
+                  }}
+                >
+                  Clear
+                </button>
+              )}
             </div>
           </div>
 
