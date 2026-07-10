@@ -9,20 +9,24 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.GoogleTokenDto = void 0;
+exports.LoginUserDto = void 0;
 const class_validator_1 = require("class-validator");
 const swagger_1 = require("@nestjs/swagger");
-class GoogleTokenDto {
-    token;
+class LoginUserDto {
+    username;
+    password;
 }
-exports.GoogleTokenDto = GoogleTokenDto;
+exports.LoginUserDto = LoginUserDto;
 __decorate([
-    (0, swagger_1.ApiProperty)({
-        description: 'The Google ID Token received from client-side Google sign-in',
-        example: 'eyJhbGciOiJSUzI1NiIsImtpZCI6IjFl...',
-    }),
+    (0, swagger_1.ApiProperty)({ description: 'The registered username', example: 'alice' }),
     (0, class_validator_1.IsNotEmpty)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
-], GoogleTokenDto.prototype, "token", void 0);
-//# sourceMappingURL=google-token.dto.js.map
+], LoginUserDto.prototype, "username", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'The account password', example: 'password123' }),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], LoginUserDto.prototype, "password", void 0);
+//# sourceMappingURL=login-user.dto.js.map

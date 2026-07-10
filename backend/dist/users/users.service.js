@@ -28,8 +28,8 @@ let UsersService = class UsersService {
     async findOneByEmail(email) {
         return this.usersRepository.findOne({ where: { email } });
     }
-    async findOneByGoogleId(googleId) {
-        return this.usersRepository.findOne({ where: { googleId } });
+    async findOneByUsername(username) {
+        return this.usersRepository.findOne({ where: { username } });
     }
     async create(userData) {
         const user = this.usersRepository.create(userData);

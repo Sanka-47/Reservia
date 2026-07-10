@@ -9,11 +9,14 @@ import {
   UseGuards,
   HttpCode,
   HttpStatus,
+  Req,
+  ForbiddenException,
 } from '@nestjs/common';
 import { ServicesService } from './services.service';
 import { CreateServiceDto } from './dto/create-service.dto';
 import { UpdateServiceDto } from './dto/update-service.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { UserRole } from '../users/entities/user.entity';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam } from '@nestjs/swagger';
 
 @ApiTags('Services')
@@ -25,11 +28,15 @@ export class ServicesController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('JWT-auth')
   @HttpCode(HttpStatus.CREATED)
-  @ApiOperation({ summary: 'Create a new service (Authenticated)' })
+  @ApiOperation({ summary: 'Create a new service (Admin Only)' })
   @ApiResponse({ status: 201, description: 'Service successfully created.' })
   @ApiResponse({ status: 400, description: 'Invalid input data.' })
   @ApiResponse({ status: 401, description: 'Unauthorized.' })
-  create(@Body() createServiceDto: CreateServiceDto) {
+  @ApiResponse({ status: 403, description: 'Forbidden. Admin role required.' })
+  create(@Body() createServiceDto: CreateServiceDto, @Req() req: any) {
+    if (req.user.role !== UserRole.ADMIN) {
+      throw new ForbiddenException('Only administrators can manage services');
+    }
     return this.servicesService.create(createServiceDto);
   }
 
@@ -52,13 +59,21 @@ export class ServicesController {
   @Patch(':id')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ summary: 'Update a service by ID (Authenticated)' })
+  @ApiOperation({ summary: 'Update a service by ID (Admin Only)' })
   @ApiParam({ name: 'id', description: 'The service UUID' })
   @ApiResponse({ status: 200, description: 'Service successfully updated.' })
   @ApiResponse({ status: 400, description: 'Invalid input data.' })
   @ApiResponse({ status: 401, description: 'Unauthorized.' })
+  @ApiResponse({ status: 403, description: 'Forbidden. Admin role required.' })
   @ApiResponse({ status: 404, description: 'Service not found.' })
-  update(@Param('id') id: string, @Body() updateServiceDto: UpdateServiceDto) {
+  update(
+    @Param('id') id: string,
+    @Body() updateServiceDto: UpdateServiceDto,
+    @Req() req: any,
+  ) {
+    if (req.user.role !== UserRole.ADMIN) {
+      throw new ForbiddenException('Only administrators can manage services');
+    }
     return this.servicesService.update(id, updateServiceDto);
   }
 
@@ -66,16 +81,20 @@ export class ServicesController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('JWT-auth')
   @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({ summary: 'Delete a service by ID (Authenticated)' })
+  @ApiOperation({ summary: 'Delete a service by ID (Admin Only)' })
   @ApiParam({ name: 'id', description: 'The service UUID' })
   @ApiResponse({ status: 204, description: 'Service successfully deleted.' })
   @ApiResponse({ status: 401, description: 'Unauthorized.' })
+  @ApiResponse({ status: 403, description: 'Forbidden. Admin role required.' })
   @ApiResponse({ status: 404, description: 'Service not found.' })
   @ApiResponse({
     status: 400,
     description: 'Bad Request: Service cannot be deleted because it is referenced by existing bookings.',
   })
-  remove(@Param('id') id: string) {
+  remove(@Param('id') id: string, @Req() req: any) {
+    if (req.user.role !== UserRole.ADMIN) {
+      throw new ForbiddenException('Only administrators can manage services');
+    }
     return this.servicesService.remove(id);
   }
 }

@@ -47,49 +47,54 @@ const common_1 = require("@nestjs/common");
 const jwt_1 = require("@nestjs/jwt");
 const config_1 = require("@nestjs/config");
 const users_service_1 = require("../users/users.service");
-const google_auth_service_1 = require("./google-auth.service");
+const user_entity_1 = require("../users/entities/user.entity");
 const crypto = __importStar(require("crypto"));
 let AuthService = class AuthService {
     usersService;
-    googleAuthService;
     jwtService;
     configService;
-    constructor(usersService, googleAuthService, jwtService, configService) {
+    constructor(usersService, jwtService, configService) {
         this.usersService = usersService;
-        this.googleAuthService = googleAuthService;
         this.jwtService = jwtService;
         this.configService = configService;
+    }
+    hashPassword(password) {
+        return crypto.createHash('sha256').update(password).digest('hex');
     }
     hashToken(token) {
         return crypto.createHash('sha256').update(token).digest('hex');
     }
-    async registerGoogle(token) {
-        const googlePayload = await this.googleAuthService.verify(token);
-        let user = await this.usersService.findOneByGoogleId(googlePayload.googleId);
-        if (!user) {
-            user = await this.usersService.findOneByEmail(googlePayload.email);
+    async register(registerDto) {
+        const { username, password, email, name, gender, phoneNumber, dob } = registerDto;
+        let existing = await this.usersService.findOneByUsername(username);
+        if (existing) {
+            throw new common_1.ConflictException('Username is already taken');
         }
-        if (user) {
-            throw new common_1.ConflictException('User with this email or Google account already registered');
+        existing = await this.usersService.findOneByEmail(email);
+        if (existing) {
+            throw new common_1.ConflictException('Email address is already registered');
         }
-        const newUser = await this.usersService.create({
-            email: googlePayload.email,
-            name: googlePayload.name,
-            googleId: googlePayload.googleId,
+        const passwordHash = this.hashPassword(password);
+        const user = await this.usersService.create({
+            username,
+            passwordHash,
+            email,
+            name,
+            gender,
+            phoneNumber,
+            dob,
+            role: user_entity_1.UserRole.CUSTOMER,
         });
-        return this.generateTokensResponse(newUser);
+        return this.generateTokensResponse(user);
     }
-    async loginGoogle(token) {
-        const googlePayload = await this.googleAuthService.verify(token);
-        let user = await this.usersService.findOneByGoogleId(googlePayload.googleId);
+    async login(username, password) {
+        const user = await this.usersService.findOneByUsername(username);
         if (!user) {
-            user = await this.usersService.findOneByEmail(googlePayload.email);
-            if (user) {
-                user = await this.usersService.update(user.id, { googleId: googlePayload.googleId });
-            }
+            throw new common_1.UnauthorizedException('Invalid username or password');
         }
-        if (!user) {
-            throw new common_1.UnauthorizedException('User not registered. Please register first.');
+        const inputHash = this.hashPassword(password);
+        if (user.passwordHash !== inputHash) {
+            throw new common_1.UnauthorizedException('Invalid username or password');
         }
         return this.generateTokensResponse(user);
     }
@@ -118,13 +123,13 @@ let AuthService = class AuthService {
         return { message: 'Logged out successfully' };
     }
     async generateTokensResponse(user) {
-        const payload = { sub: user.id, email: user.email };
+        const payload = { sub: user.id, username: user.username, role: user.role };
         const accessToken = await this.jwtService.signAsync(payload, {
-            secret: this.configService.get('JWT_SECRET'),
+            secret: this.configService.get('JWT_SECRET') ?? 'super_secret_jwt_key_change_me',
             expiresIn: '15m',
         });
         const refreshToken = await this.jwtService.signAsync({ sub: user.id }, {
-            secret: this.configService.get('JWT_REFRESH_SECRET'),
+            secret: this.configService.get('JWT_REFRESH_SECRET') ?? 'super_secret_refresh_jwt_key_change_me',
             expiresIn: '7d',
         });
         const refreshTokenHash = this.hashToken(refreshToken);
@@ -134,8 +139,13 @@ let AuthService = class AuthService {
             refreshToken,
             user: {
                 id: user.id,
+                username: user.username,
                 email: user.email,
                 name: user.name,
+                role: user.role,
+                gender: user.gender,
+                phoneNumber: user.phoneNumber,
+                dob: user.dob,
             },
         };
     }
@@ -144,7 +154,6 @@ exports.AuthService = AuthService;
 exports.AuthService = AuthService = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [users_service_1.UsersService,
-        google_auth_service_1.GoogleAuthService,
         jwt_1.JwtService,
         config_1.ConfigService])
 ], AuthService);

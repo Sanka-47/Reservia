@@ -5,7 +5,7 @@ export declare class UsersService {
     constructor(usersRepository: Repository<User>);
     findOneById(id: string): Promise<User | null>;
     findOneByEmail(email: string): Promise<User | null>;
-    findOneByGoogleId(googleId: string): Promise<User | null>;
+    findOneByUsername(username: string): Promise<User | null>;
     create(userData: Partial<User>): Promise<User>;
     update(id: string, updateData: Partial<User>): Promise<User>;
 }

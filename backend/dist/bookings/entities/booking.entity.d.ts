@@ -1,4 +1,5 @@
 import { Service } from '../../services/entities/service.entity';
+import { User } from '../../users/entities/user.entity';
 export declare enum BookingStatus {
     PENDING = "PENDING",
     CONFIRMED = "CONFIRMED",
@@ -12,6 +13,8 @@ export declare class Booking {
     customerPhone: string;
     serviceId: string;
     service: Service;
+    userId: string;
+    user: User;
     bookingDate: string;
     bookingTime: string;
     status: BookingStatus;

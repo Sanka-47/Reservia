@@ -1,16 +1,22 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { api } from '../utils/api';
 
-interface User {
+export interface User {
   id: string;
-  name: string;
+  username: string;
   email: string;
+  name: string;
+  role: 'CUSTOMER' | 'ADMIN';
+  gender: string;
+  phoneNumber: string;
+  dob: string;
 }
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  login: (token: string, mode: 'login' | 'register') => Promise<void>;
+  login: (username: string, password: string) => Promise<void>;
+  register: (registerData: any) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -40,11 +46,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, []);
 
-  const login = async (token: string, mode: 'login' | 'register') => {
+  const login = async (username: string, password: string) => {
     try {
-      const endpoint = mode === 'register' ? '/auth/register/google' : '/auth/login/google';
-      const response = await api.post(endpoint, { token });
-      
+      const response = await api.post('/auth/login', { username, password });
       const { accessToken, refreshToken, user: userData } = response.data;
       
       localStorage.setItem('accessToken', accessToken);
@@ -53,14 +57,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       setUser(userData);
     } catch (error) {
-      console.error('Authentication request failed:', error);
+      console.error('Login failed:', error);
+      throw error;
+    }
+  };
+
+  const register = async (registerData: any) => {
+    try {
+      const response = await api.post('/auth/register', registerData);
+      const { accessToken, refreshToken, user: userData } = response.data;
+      
+      localStorage.setItem('accessToken', accessToken);
+      localStorage.setItem('refreshToken', refreshToken);
+      localStorage.setItem('user', JSON.stringify(userData));
+      
+      setUser(userData);
+    } catch (error) {
+      console.error('Registration failed:', error);
       throw error;
     }
   };
 
   const logout = async () => {
     try {
-      // Best-effort logout notification to backend
       await api.post('/auth/logout');
     } catch (e) {
       console.error('Logout error on backend:', e);
@@ -73,7 +92,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout }}>
       {children}
     </AuthContext.Provider>
   );

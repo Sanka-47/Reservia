@@ -12,7 +12,6 @@ const jwt_1 = require("@nestjs/jwt");
 const passport_1 = require("@nestjs/passport");
 const users_module_1 = require("../users/users.module");
 const auth_service_1 = require("./auth.service");
-const google_auth_service_1 = require("./google-auth.service");
 const auth_controller_1 = require("./auth.controller");
 const jwt_strategy_1 = require("./strategies/jwt.strategy");
 let AuthModule = class AuthModule {
@@ -25,7 +24,7 @@ exports.AuthModule = AuthModule = __decorate([
             passport_1.PassportModule.register({ defaultStrategy: 'jwt' }),
             jwt_1.JwtModule.register({}),
         ],
-        providers: [auth_service_1.AuthService, google_auth_service_1.GoogleAuthService, jwt_strategy_1.JwtStrategy],
+        providers: [auth_service_1.AuthService, jwt_strategy_1.JwtStrategy],
         controllers: [auth_controller_1.AuthController],
         exports: [auth_service_1.AuthService, jwt_strategy_1.JwtStrategy, passport_1.PassportModule],
     })

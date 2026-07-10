@@ -1,11 +1,13 @@
-import { Injectable, NotFoundException, BadRequestException, ConflictException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, ConflictException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Not } from 'typeorm';
 import { Booking, BookingStatus } from './entities/booking.entity';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { UpdateBookingStatusDto } from './dto/update-booking-status.dto';
+import { UpdateBookingDto } from './dto/update-booking.dto';
 import { GetBookingsFilterDto } from './dto/get-bookings-filter.dto';
 import { ServicesService } from '../services/services.service';
+import { User, UserRole } from '../users/entities/user.entity';
 
 @Injectable()
 export class BookingsService {
@@ -15,7 +17,7 @@ export class BookingsService {
     private readonly servicesService: ServicesService,
   ) {}
 
-  async create(createBookingDto: CreateBookingDto): Promise<Booking> {
+  async create(createBookingDto: CreateBookingDto, user: User): Promise<Booking> {
     // 1. Verify service exists and is active
     const service = await this.servicesService.findOne(createBookingDto.serviceId);
     if (!service.isActive) {
@@ -23,8 +25,7 @@ export class BookingsService {
     }
 
     // 2. Validate booking date is not in the past
-    // Compare dates in standard YYYY-MM-DD local format
-    const todayStr = new Date().toLocaleDateString('en-CA'); // Outputs YYYY-MM-DD
+    const todayStr = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD local format
     if (createBookingDto.bookingDate < todayStr) {
       throw new BadRequestException('Booking date cannot be in the past');
     }
@@ -45,26 +46,38 @@ export class BookingsService {
       );
     }
 
-    // 4. Create and save booking (default status is PENDING)
+    // 4. Populate customer info from session user if missing
+    const customerName = createBookingDto.customerName || user.name;
+    const customerEmail = createBookingDto.customerEmail || user.email;
+    const customerPhone = createBookingDto.customerPhone || user.phoneNumber;
+
+    // 5. Create and save booking
     const booking = this.bookingsRepository.create({
       ...createBookingDto,
+      customerName,
+      customerEmail,
+      customerPhone,
+      userId: user.id,
       status: BookingStatus.PENDING,
     });
 
     const savedBooking = await this.bookingsRepository.save(booking);
-    
-    // Return with service attached
     savedBooking.service = service;
     return savedBooking;
   }
 
-  async findAll(filterDto: GetBookingsFilterDto) {
+  async findAll(filterDto: GetBookingsFilterDto, user: User) {
     const { page = 1, limit = 10, status, serviceId, search } = filterDto;
     const skip = (page - 1) * limit;
 
     const query = this.bookingsRepository
       .createQueryBuilder('booking')
       .leftJoinAndSelect('booking.service', 'service');
+
+    // ENFORCE Access control check: Customers can only see their own bookings
+    if (user.role === UserRole.CUSTOMER) {
+      query.andWhere('booking.userId = :userId', { userId: user.id });
+    }
 
     if (status) {
       query.andWhere('booking.status = :status', { status });
@@ -98,7 +111,7 @@ export class BookingsService {
     };
   }
 
-  async findOne(id: string): Promise<Booking> {
+  async findOne(id: string, user: User): Promise<Booking> {
     const booking = await this.bookingsRepository.findOne({
       where: { id },
       relations: { service: true },
@@ -108,12 +121,17 @@ export class BookingsService {
       throw new NotFoundException(`Booking with ID "${id}" not found`);
     }
 
+    // ENFORCE Access control check: Check ownership unless Admin
+    if (user.role !== UserRole.ADMIN && booking.userId !== user.id) {
+      throw new ForbiddenException('You do not have permission to view this booking');
+    }
+
     return booking;
   }
 
-  async updateStatus(id: string, updateBookingStatusDto: UpdateBookingStatusDto): Promise<Booking> {
+  async updateStatus(id: string, updateBookingStatusDto: UpdateBookingStatusDto, user: User): Promise<Booking> {
     const { status } = updateBookingStatusDto;
-    const booking = await this.findOne(id);
+    const booking = await this.findOne(id, user); // findOne already enforces ownership check
 
     // Business rule: Cancelled bookings cannot be marked as completed
     if (booking.status === BookingStatus.CANCELLED && status === BookingStatus.COMPLETED) {
@@ -124,14 +142,60 @@ export class BookingsService {
     return this.bookingsRepository.save(booking);
   }
 
-  async cancel(id: string): Promise<Booking> {
-    const booking = await this.findOne(id);
+  async cancel(id: string, user: User): Promise<Booking> {
+    const booking = await this.findOne(id, user); // findOne already enforces ownership check
 
     if (booking.status === BookingStatus.CANCELLED) {
       return booking;
     }
 
     booking.status = BookingStatus.CANCELLED;
+    return this.bookingsRepository.save(booking);
+  }
+
+  async update(id: string, updateBookingDto: UpdateBookingDto, user: User): Promise<Booking> {
+    const booking = await this.findOne(id, user); // findOne already checks ownership
+
+    if (booking.status === BookingStatus.CANCELLED || booking.status === BookingStatus.COMPLETED) {
+      throw new BadRequestException('Cannot edit cancelled or completed bookings');
+    }
+
+    if (updateBookingDto.bookingDate || updateBookingDto.bookingTime) {
+      const date = updateBookingDto.bookingDate || booking.bookingDate;
+      const time = updateBookingDto.bookingTime || booking.bookingTime;
+
+      // Validate date is not in the past
+      const todayStr = new Date().toLocaleDateString('en-CA');
+      if (date < todayStr) {
+        throw new BadRequestException('Rescheduled date cannot be in the past');
+      }
+
+      // Check slot availability
+      const duplicate = await this.bookingsRepository.findOne({
+        where: {
+          id: Not(id),
+          serviceId: booking.serviceId,
+          bookingDate: date,
+          bookingTime: time,
+          status: Not(BookingStatus.CANCELLED),
+        },
+      });
+
+      if (duplicate) {
+        throw new ConflictException('The selected timeslot is already booked');
+      }
+
+      booking.bookingDate = date;
+      booking.bookingTime = time;
+    }
+
+    if (updateBookingDto.notes !== undefined) {
+      booking.notes = updateBookingDto.notes;
+    }
+    if (updateBookingDto.customerName) booking.customerName = updateBookingDto.customerName;
+    if (updateBookingDto.customerEmail) booking.customerEmail = updateBookingDto.customerEmail;
+    if (updateBookingDto.customerPhone) booking.customerPhone = updateBookingDto.customerPhone;
+
     return this.bookingsRepository.save(booking);
   }
 }
