@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
+import { DatePicker } from './DatePicker';
 
 interface Service {
   id: string;
@@ -375,13 +376,11 @@ export const CustomerPortal: React.FC<CustomerPortalProps> = ({ onRequireLogin }
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                 <div className="form-group">
                   <label className="form-label">Date</label>
-                  <input 
-                    type="date" 
-                    className="form-input" 
+                  <DatePicker 
+                    value={date}
+                    onChange={setDate}
                     min={today}
                     required 
-                    value={date}
-                    onChange={e => setDate(e.target.value)}
                   />
                 </div>
                 <div className="form-group">

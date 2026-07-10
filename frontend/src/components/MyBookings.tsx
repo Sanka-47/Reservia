@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../utils/api';
+import { DatePicker } from './DatePicker';
 
 interface Booking {
   id: string;
@@ -327,13 +328,11 @@ export const MyBookings: React.FC = () => {
 
               <div className="form-group">
                 <label className="form-label">New Date</label>
-                <input 
-                  type="date" 
-                  className="form-input" 
+                <DatePicker 
+                  value={rescheduleDate}
+                  onChange={setRescheduleDate}
                   min={today}
                   required 
-                  value={rescheduleDate}
-                  onChange={e => setRescheduleDate(e.target.value)}
                 />
               </div>
 
