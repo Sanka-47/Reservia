@@ -50,15 +50,6 @@ export const MyBookings: React.FC = () => {
 
   const today = new Date().toLocaleDateString('en-CA');
 
-  // Debounce search input to avoid redundant API queries
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setSearchQuery(searchVal);
-      setPage(1);
-    }, 400);
-    return () => clearTimeout(handler);
-  }, [searchVal]);
-
   // Fetch bookings when page, search query, or status filter changes
   useEffect(() => {
     fetchBookings();
@@ -174,14 +165,30 @@ export const MyBookings: React.FC = () => {
 
       {/* Search & Filter Controls */}
       <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', marginBottom: '24px' }}>
-        <div style={{ flex: 1, minWidth: '260px' }}>
+        <div style={{ flex: 1, minWidth: '260px', display: 'flex', gap: '8px' }}>
           <input 
             type="text" 
             className="form-input" 
             placeholder="Search appointments by service title or notes..." 
             value={searchVal}
             onChange={e => setSearchVal(e.target.value)}
+            onKeyDown={e => {
+              if (e.key === 'Enter') {
+                setSearchQuery(searchVal);
+                setPage(1);
+              }
+            }}
           />
+          <button 
+            type="button"
+            className="btn btn-primary"
+            onClick={() => {
+              setSearchQuery(searchVal);
+              setPage(1);
+            }}
+          >
+            🔍 Search
+          </button>
         </div>
         <div style={{ width: '180px' }}>
           <select 
@@ -207,7 +214,7 @@ export const MyBookings: React.FC = () => {
               <p style={{ color: 'var(--text-muted)', marginBottom: '24px' }}>Try adjusting your search query or status filter.</p>
               <button 
                 className="btn btn-secondary btn-small"
-                onClick={() => { setSearchVal(''); setStatusFilter(''); setPage(1); }}
+                onClick={() => { setSearchVal(''); setSearchQuery(''); setStatusFilter(''); setPage(1); }}
               >
                 Clear Filters
               </button>

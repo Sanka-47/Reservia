@@ -51,6 +51,7 @@ export const AdminPortal: React.FC = () => {
   const [bookingsTotal, setBookingsTotal] = useState(0);
   const [bookingsPage, setBookingsPage] = useState(1);
   const [bookingsTotalPages, setBookingsTotalPages] = useState(1);
+  const [searchVal, setSearchVal] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
 
@@ -237,14 +238,30 @@ export const AdminPortal: React.FC = () => {
           
           {/* Filters area */}
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-            <div style={{ display: 'flex', gap: '12px', flex: 1, minWidth: '300px' }}>
+            <div style={{ display: 'flex', gap: '8px', flex: 1, minWidth: '300px' }}>
               <input 
                 type="text" 
                 className="form-input" 
                 placeholder="Search by customer, phone, email or service name..."
-                value={searchQuery}
-                onChange={e => { setSearchQuery(e.target.value); setBookingsPage(1); }}
+                value={searchVal}
+                onChange={e => setSearchVal(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter') {
+                    setSearchQuery(searchVal);
+                    setBookingsPage(1);
+                  }
+                }}
               />
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={() => {
+                  setSearchQuery(searchVal);
+                  setBookingsPage(1);
+                }}
+              >
+                🔍 Search
+              </button>
             </div>
             
             <div style={{ display: 'flex', gap: '12px' }}>
