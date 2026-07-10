@@ -37,6 +37,15 @@ export const CustomerPortal: React.FC<CustomerPortalProps> = ({ onRequireLogin }
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<'none' | 'price-asc' | 'price-desc'>('none');
 
+  // Pagination State
+  const [page, setPage] = useState(1);
+  const limit = 6;
+
+  // Reset page when filter/sort options change
+  useEffect(() => {
+    setPage(1);
+  }, [searchQuery, sortBy]);
+
   // Compute filtered & sorted services
   const filteredAndSortedServices = React.useMemo(() => {
     return services
@@ -54,6 +63,13 @@ export const CustomerPortal: React.FC<CustomerPortalProps> = ({ onRequireLogin }
         return 0;
       });
   }, [services, searchQuery, sortBy]);
+
+  const totalPages = Math.ceil(filteredAndSortedServices.length / limit);
+
+  const paginatedServices = React.useMemo(() => {
+    const startIndex = (page - 1) * limit;
+    return filteredAndSortedServices.slice(startIndex, startIndex + limit);
+  }, [filteredAndSortedServices, page]);
   
   // Form Fields
   const [name, setName] = useState('');
@@ -232,7 +248,7 @@ export const CustomerPortal: React.FC<CustomerPortalProps> = ({ onRequireLogin }
       </div>
 
       {/* Services Grid */}
-      {filteredAndSortedServices.length === 0 ? (
+      {paginatedServices.length === 0 ? (
         <div className="glass-panel" style={{ padding: '60px', textAlign: 'center' }}>
           <span style={{ fontSize: '3rem', display: 'block', marginBottom: '16px' }}>🔍</span>
           <h3 style={{ fontSize: '1.4rem', marginBottom: '8px' }}>No matching services found</h3>
@@ -245,30 +261,57 @@ export const CustomerPortal: React.FC<CustomerPortalProps> = ({ onRequireLogin }
           </button>
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '24px' }}>
-          {filteredAndSortedServices.map(service => (
-            <div key={service.id} className="glass-panel glass-panel-hover" style={{ padding: '24px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: '240px' }}>
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '12px' }}>
-                  <h3 style={{ fontSize: '1.3rem', color: 'var(--text-main)' }}>{service.title}</h3>
-                  <span style={{ color: 'var(--accent)', fontWeight: 'bold', fontSize: '1.25rem' }}>${service.price.toFixed(2)}</span>
+        <>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '24px' }}>
+            {paginatedServices.map(service => (
+              <div key={service.id} className="glass-panel glass-panel-hover" style={{ padding: '24px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: '240px' }}>
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '12px' }}>
+                    <h3 style={{ fontSize: '1.3rem', color: 'var(--text-main)' }}>{service.title}</h3>
+                    <span style={{ color: 'var(--accent)', fontWeight: 'bold', fontSize: '1.25rem' }}>${service.price.toFixed(2)}</span>
+                  </div>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '20px', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                    {service.description}
+                  </p>
                 </div>
-                <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '20px', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                  {service.description}
-                </p>
+                
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--border-color)', paddingTop: '16px', marginTop: '16px' }}>
+                  <span style={{ fontSize: '0.85rem', color: 'var(--text-dark)' }}>
+                    🕒 {service.duration} mins
+                  </span>
+                  <button className="btn btn-primary btn-small" onClick={() => handleOpenBooking(service)}>
+                    {user ? 'Book Now' : 'Sign In to Book'}
+                  </button>
+                </div>
               </div>
-              
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--border-color)', paddingTop: '16px', marginTop: '16px' }}>
-                <span style={{ fontSize: '0.85rem', color: 'var(--text-dark)' }}>
-                  🕒 {service.duration} mins
-                </span>
-                <button className="btn btn-primary btn-small" onClick={() => handleOpenBooking(service)}>
-                  {user ? 'Book Now' : 'Sign In to Book'}
+            ))}
+          </div>
+
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '32px', paddingTop: '20px', borderTop: '1px solid var(--border-color)' }}>
+              <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                Page {page} of {totalPages} ({filteredAndSortedServices.length} total services)
+              </span>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button 
+                  className="btn btn-secondary btn-small" 
+                  disabled={page <= 1}
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                >
+                  ◀ Prev
+                </button>
+                <button 
+                  className="btn btn-secondary btn-small" 
+                  disabled={page >= totalPages}
+                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                >
+                  Next ▶
                 </button>
               </div>
             </div>
-          ))}
-        </div>
+          )}
+        </>
       )}
 
       {/* Booking Form Modal */}
