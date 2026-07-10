@@ -31,6 +31,29 @@ export const CustomerPortal: React.FC<CustomerPortalProps> = ({ onRequireLogin }
   const [selectedService, setSelectedService] = useState<Service | null>(null);
   const [loading, setLoading] = useState(true);
   const [bookingSuccess, setBookingSuccess] = useState<BookingResponse | null>(null);
+
+  // Search & Sort State
+  const [searchVal, setSearchVal] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState<'none' | 'price-asc' | 'price-desc'>('none');
+
+  // Compute filtered & sorted services
+  const filteredAndSortedServices = React.useMemo(() => {
+    return services
+      .filter(service => {
+        if (!searchQuery) return true;
+        const query = searchQuery.toLowerCase();
+        return (
+          service.title.toLowerCase().includes(query) ||
+          service.description.toLowerCase().includes(query)
+        );
+      })
+      .sort((a, b) => {
+        if (sortBy === 'price-asc') return a.price - b.price;
+        if (sortBy === 'price-desc') return b.price - a.price;
+        return 0;
+      });
+  }, [services, searchQuery, sortBy]);
   
   // Form Fields
   const [name, setName] = useState('');
@@ -156,31 +179,83 @@ export const CustomerPortal: React.FC<CustomerPortalProps> = ({ onRequireLogin }
         </div>
       )}
 
-      {/* Services Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '24px' }}>
-        {services.map(service => (
-          <div key={service.id} className="glass-panel glass-panel-hover" style={{ padding: '24px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: '240px' }}>
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '12px' }}>
-                <h3 style={{ fontSize: '1.3rem', color: 'var(--text-main)' }}>{service.title}</h3>
-                <span style={{ color: 'var(--accent)', fontWeight: 'bold', fontSize: '1.25rem' }}>${service.price.toFixed(2)}</span>
-              </div>
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '20px', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                {service.description}
-              </p>
-            </div>
-            
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--border-color)', paddingTop: '16px', marginTop: '16px' }}>
-              <span style={{ fontSize: '0.85rem', color: 'var(--text-dark)' }}>
-                🕒 {service.duration} mins
-              </span>
-              <button className="btn btn-primary btn-small" onClick={() => handleOpenBooking(service)}>
-                {user ? 'Book Now' : 'Sign In to Book'}
-              </button>
-            </div>
-          </div>
-        ))}
+      {/* Search & Sort Controls */}
+      <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', marginBottom: '32px' }}>
+        <div style={{ flex: 1, minWidth: '280px', display: 'flex', gap: '8px' }}>
+          <input 
+            type="text" 
+            className="form-input" 
+            placeholder="Search services by title or description..." 
+            value={searchVal}
+            onChange={e => setSearchVal(e.target.value)}
+            onKeyDown={e => {
+              if (e.key === 'Enter') {
+                setSearchQuery(searchVal);
+              }
+            }}
+          />
+          <button 
+            type="button"
+            className="btn btn-primary"
+            onClick={() => {
+              setSearchQuery(searchVal);
+            }}
+          >
+            🔍 Search
+          </button>
+        </div>
+        <div style={{ width: '200px' }}>
+          <select 
+            className="form-input" 
+            value={sortBy}
+            onChange={e => setSortBy(e.target.value as any)}
+          >
+            <option value="none">Sort by: Default</option>
+            <option value="price-asc">Price: Low to High</option>
+            <option value="price-desc">Price: High to Low</option>
+          </select>
+        </div>
       </div>
+
+      {/* Services Grid */}
+      {filteredAndSortedServices.length === 0 ? (
+        <div className="glass-panel" style={{ padding: '60px', textAlign: 'center' }}>
+          <span style={{ fontSize: '3rem', display: 'block', marginBottom: '16px' }}>🔍</span>
+          <h3 style={{ fontSize: '1.4rem', marginBottom: '8px' }}>No matching services found</h3>
+          <p style={{ color: 'var(--text-muted)', marginBottom: '24px' }}>Try adjusting your search query or clear the filters.</p>
+          <button 
+            className="btn btn-secondary btn-small"
+            onClick={() => { setSearchVal(''); setSearchQuery(''); setSortBy('none'); }}
+          >
+            Clear Filters
+          </button>
+        </div>
+      ) : (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '24px' }}>
+          {filteredAndSortedServices.map(service => (
+            <div key={service.id} className="glass-panel glass-panel-hover" style={{ padding: '24px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: '240px' }}>
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '12px' }}>
+                  <h3 style={{ fontSize: '1.3rem', color: 'var(--text-main)' }}>{service.title}</h3>
+                  <span style={{ color: 'var(--accent)', fontWeight: 'bold', fontSize: '1.25rem' }}>${service.price.toFixed(2)}</span>
+                </div>
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '20px', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                  {service.description}
+                </p>
+              </div>
+              
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--border-color)', paddingTop: '16px', marginTop: '16px' }}>
+                <span style={{ fontSize: '0.85rem', color: 'var(--text-dark)' }}>
+                  🕒 {service.duration} mins
+                </span>
+                <button className="btn btn-primary btn-small" onClick={() => handleOpenBooking(service)}>
+                  {user ? 'Book Now' : 'Sign In to Book'}
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Booking Form Modal */}
       {selectedService && user && (
