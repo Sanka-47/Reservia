@@ -37,19 +37,19 @@ const MainApp: React.FC = () => {
         <div className="nav-logo" onClick={() => setView('customer')} style={{ cursor: 'pointer' }}>
           <span style={{ color: 'var(--primary)', fontSize: '1.8rem' }}>✦</span> Reservia
         </div>
-        
+
         <div className="nav-links" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           {/* Services Catalog Tab (Accessible by everyone) */}
-          <button 
+          <button
             className={`btn btn-small ${view === 'customer' ? 'btn-primary' : 'btn-secondary'}`}
             onClick={() => setView('customer')}
           >
             🗓 Service Catalog
           </button>
-          
+
           {/* Bookings Tab (Customers only) */}
           {user && user.role === 'CUSTOMER' && (
-            <button 
+            <button
               className={`btn btn-small ${view === 'bookings' ? 'btn-primary' : 'btn-secondary'}`}
               onClick={() => setView('bookings')}
             >
@@ -59,7 +59,7 @@ const MainApp: React.FC = () => {
 
           {/* Admin Panel Tab (Admins only) */}
           {user && user.role === 'ADMIN' && (
-            <button 
+            <button
               className={`btn btn-small ${view === 'admin' ? 'btn-primary' : 'btn-secondary'}`}
               onClick={() => setView('admin')}
             >
@@ -74,16 +74,16 @@ const MainApp: React.FC = () => {
                 <span style={{ fontSize: '0.9rem', color: 'var(--text-main)', fontWeight: 'bold' }}>
                   {user.name} {user.role === 'ADMIN' && <span style={{ color: 'var(--accent)', fontSize: '0.8rem' }}>(Admin)</span>}
                 </span>
-                <button 
+                <button
                   className="btn btn-secondary btn-small"
                   onClick={handleLogout}
                   style={{ border: '1px solid rgba(239, 68, 68, 0.4)', color: '#ef4444' }}
                 >
-                  🚪 Sign Out
+                  Sign Out
                 </button>
               </>
             ) : (
-              <button 
+              <button
                 className={`btn btn-small ${view === 'auth' ? 'btn-primary' : 'btn-secondary'}`}
                 onClick={() => setView('auth')}
               >
@@ -99,15 +99,15 @@ const MainApp: React.FC = () => {
         {view === 'customer' && (
           <CustomerPortal onRequireLogin={() => setView('auth')} />
         )}
-        
+
         {view === 'bookings' && user && user.role === 'CUSTOMER' && (
           <MyBookings />
         )}
-        
+
         {view === 'auth' && !user && (
           <AuthPortal />
         )}
-        
+
         {view === 'admin' && user && user.role === 'ADMIN' && (
           <AdminPortal />
         )}
