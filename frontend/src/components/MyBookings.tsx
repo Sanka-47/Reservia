@@ -21,6 +21,17 @@ export const MyBookings: React.FC = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
+  // Search & Filter State
+  const [searchVal, setSearchVal] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+
+  // Pagination State
+  const [page, setPage] = useState(1);
+  const [limit] = useState(5);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalBookings, setTotalBookings] = useState(0);
+
   // Rescheduling Modal/State
   const [editingBooking, setEditingBooking] = useState<Booking | null>(null);
   const [rescheduleDate, setRescheduleDate] = useState('');
@@ -39,14 +50,34 @@ export const MyBookings: React.FC = () => {
 
   const today = new Date().toLocaleDateString('en-CA');
 
+  // Debounce search input to avoid redundant API queries
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setSearchQuery(searchVal);
+      setPage(1);
+    }, 400);
+    return () => clearTimeout(handler);
+  }, [searchVal]);
+
+  // Fetch bookings when page, search query, or status filter changes
   useEffect(() => {
     fetchBookings();
-  }, []);
+  }, [page, searchQuery, statusFilter]);
 
   const fetchBookings = async () => {
     try {
-      const response = await api.get('/bookings?limit=50');
+      setLoading(true);
+      const response = await api.get('/bookings', {
+        params: {
+          page,
+          limit,
+          search: searchQuery || undefined,
+          status: statusFilter || undefined,
+        },
+      });
       setBookings(response.data.data);
+      setTotalBookings(response.data.total);
+      setTotalPages(response.data.totalPages);
     } catch (e) {
       console.error('Failed to load bookings:', e);
       setError('Could not retrieve your bookings list.');
@@ -141,21 +172,63 @@ export const MyBookings: React.FC = () => {
         </div>
       )}
 
+      {/* Search & Filter Controls */}
+      <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', marginBottom: '24px' }}>
+        <div style={{ flex: 1, minWidth: '260px' }}>
+          <input 
+            type="text" 
+            className="form-input" 
+            placeholder="Search appointments by service title or notes..." 
+            value={searchVal}
+            onChange={e => setSearchVal(e.target.value)}
+          />
+        </div>
+        <div style={{ width: '180px' }}>
+          <select 
+            className="form-input" 
+            value={statusFilter}
+            onChange={e => { setStatusFilter(e.target.value); setPage(1); }}
+          >
+            <option value="">All Statuses</option>
+            <option value="PENDING">Pending</option>
+            <option value="CONFIRMED">Confirmed</option>
+            <option value="COMPLETED">Completed</option>
+            <option value="CANCELLED">Cancelled</option>
+          </select>
+        </div>
+      </div>
+
       {bookings.length === 0 ? (
         <div className="glass-panel" style={{ padding: '60px', textAlign: 'center' }}>
           <span style={{ fontSize: '3rem', display: 'block', marginBottom: '16px' }}>📅</span>
-          <h3 style={{ fontSize: '1.4rem', marginBottom: '8px' }}>No bookings found</h3>
-          <p style={{ color: 'var(--text-muted)', marginBottom: '24px' }}>You haven't scheduled any services with us yet.</p>
+          {searchQuery || statusFilter ? (
+            <>
+              <h3 style={{ fontSize: '1.4rem', marginBottom: '8px' }}>No matching appointments found</h3>
+              <p style={{ color: 'var(--text-muted)', marginBottom: '24px' }}>Try adjusting your search query or status filter.</p>
+              <button 
+                className="btn btn-secondary btn-small"
+                onClick={() => { setSearchVal(''); setStatusFilter(''); setPage(1); }}
+              >
+                Clear Filters
+              </button>
+            </>
+          ) : (
+            <>
+              <h3 style={{ fontSize: '1.4rem', marginBottom: '8px' }}>No bookings found</h3>
+              <p style={{ color: 'var(--text-muted)', marginBottom: '24px' }}>You haven't scheduled any services with us yet.</p>
+            </>
+          )}
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          {bookings.map(booking => (
-            <div key={booking.id} className="glass-panel" style={{ padding: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '20px' }}>
-              <div>
-                <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '8px' }}>
-                  <h3 style={{ fontSize: '1.25rem', color: 'var(--text-main)' }}>{booking.service?.title}</h3>
-                  <span className={getStatusBadgeClass(booking.status)}>{booking.status}</span>
-                </div>
+        <>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            {bookings.map(booking => (
+              <div key={booking.id} className="glass-panel" style={{ padding: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '20px' }}>
+                <div>
+                  <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '8px' }}>
+                    <h3 style={{ fontSize: '1.25rem', color: 'var(--text-main)' }}>{booking.service?.title}</h3>
+                    <span className={`badge ${getStatusBadgeClass(booking.status)}`}>{booking.status}</span>
+                  </div>
                 <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem', display: 'flex', flexDirection: 'column', gap: '4px' }}>
                   <p><strong>Appointment Time:</strong> {booking.bookingDate} at {booking.bookingTime}</p>
                   <p><strong>Price:</strong> ${booking.service?.price.toFixed(2)} ({booking.service?.duration} mins)</p>
@@ -184,8 +257,34 @@ export const MyBookings: React.FC = () => {
                 )}
               </div>
             </div>
-          ))}
-        </div>
+            ))}
+          </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '24px', paddingTop: '16px', borderTop: '1px solid var(--border-color)' }}>
+              <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                Page {page} of {totalPages} ({totalBookings} total appointments)
+              </span>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button 
+                  className="btn btn-secondary btn-small" 
+                  disabled={page <= 1}
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                >
+                  ◀ Prev
+                </button>
+                <button 
+                  className="btn btn-secondary btn-small" 
+                  disabled={page >= totalPages}
+                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                >
+                  Next ▶
+                </button>
+              </div>
+            </div>
+          )}
+        </>
       )}
 
       {/* Reschedule Modal */}
