@@ -19,8 +19,17 @@ import { ClaimBookingsDto } from './dto/claim-bookings.dto';
 import { UpdateBookingStatusDto } from './dto/update-booking-status.dto';
 import { UpdateBookingDto } from './dto/update-booking.dto';
 import { GetBookingsFilterDto } from './dto/get-bookings-filter.dto';
-import { JwtAuthGuard, OptionalJwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam } from '@nestjs/swagger';
+import {
+  JwtAuthGuard,
+  OptionalJwtAuthGuard,
+} from '../auth/guards/jwt-auth.guard';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiParam,
+} from '@nestjs/swagger';
 
 @ApiTags('Bookings')
 @Controller('bookings')
@@ -31,9 +40,14 @@ export class BookingsController {
   @UseGuards(OptionalJwtAuthGuard)
   @ApiBearerAuth('JWT-auth')
   @HttpCode(HttpStatus.CREATED)
-  @ApiOperation({ summary: 'Create a new service booking (Authenticated Customer)' })
+  @ApiOperation({
+    summary: 'Create a new service booking (Authenticated Customer)',
+  })
   @ApiResponse({ status: 201, description: 'Booking successfully created.' })
-  @ApiResponse({ status: 400, description: 'Invalid details or date is in the past.' })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid details or date is in the past.',
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized.' })
   @ApiResponse({ status: 404, description: 'Service not found.' })
   @ApiResponse({ status: 409, description: 'Timeslot already booked.' })
@@ -69,7 +83,10 @@ export class BookingsController {
   @Get()
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ summary: 'Get bookings list. Customers see their own; Admins see all. (Authenticated)' })
+  @ApiOperation({
+    summary:
+      'Get bookings list. Customers see their own; Admins see all. (Authenticated)',
+  })
   @ApiResponse({ status: 200, description: 'Return paginated bookings list.' })
   @ApiResponse({ status: 401, description: 'Unauthorized.' })
   findAll(@Query() filterDto: GetBookingsFilterDto, @Req() req: any) {
@@ -79,7 +96,9 @@ export class BookingsController {
   @Get(':id')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ summary: 'Get a specific booking details (Authenticated owner or admin)' })
+  @ApiOperation({
+    summary: 'Get a specific booking details (Authenticated owner or admin)',
+  })
   @ApiParam({ name: 'id', description: 'The booking UUID' })
   @ApiResponse({ status: 200, description: 'Return the booking details.' })
   @ApiResponse({ status: 401, description: 'Unauthorized.' })
@@ -92,10 +111,18 @@ export class BookingsController {
   @Patch(':id/status')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ summary: 'Update a booking status (Authenticated owner or admin)' })
+  @ApiOperation({
+    summary: 'Update a booking status (Authenticated owner or admin)',
+  })
   @ApiParam({ name: 'id', description: 'The booking UUID' })
-  @ApiResponse({ status: 200, description: 'Booking status successfully updated.' })
-  @ApiResponse({ status: 400, description: 'Invalid request or invalid status transition.' })
+  @ApiResponse({
+    status: 200,
+    description: 'Booking status successfully updated.',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid request or invalid status transition.',
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized.' })
   @ApiResponse({ status: 403, description: 'Forbidden. No ownership.' })
   @ApiResponse({ status: 404, description: 'Booking not found.' })
@@ -104,7 +131,11 @@ export class BookingsController {
     @Body() updateBookingStatusDto: UpdateBookingStatusDto,
     @Req() req: any,
   ) {
-    return this.bookingsService.updateStatus(id, updateBookingStatusDto, req.user);
+    return this.bookingsService.updateStatus(
+      id,
+      updateBookingStatusDto,
+      req.user,
+    );
   }
 
   @Patch(':id/cancel')
@@ -123,10 +154,18 @@ export class BookingsController {
   @Patch(':id')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ summary: 'Reschedule or edit a booking (Authenticated owner or admin)' })
+  @ApiOperation({
+    summary: 'Reschedule or edit a booking (Authenticated owner or admin)',
+  })
   @ApiParam({ name: 'id', description: 'The booking UUID' })
-  @ApiResponse({ status: 200, description: 'Booking successfully updated/rescheduled.' })
-  @ApiResponse({ status: 400, description: 'Invalid date/time or status constraints.' })
+  @ApiResponse({
+    status: 200,
+    description: 'Booking successfully updated/rescheduled.',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid date/time or status constraints.',
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized.' })
   @ApiResponse({ status: 403, description: 'Forbidden. No ownership.' })
   @ApiResponse({ status: 404, description: 'Booking not found.' })

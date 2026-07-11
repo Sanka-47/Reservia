@@ -1,4 +1,10 @@
-import { Injectable, NotFoundException, BadRequestException, ConflictException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  ConflictException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Not, In, IsNull } from 'typeorm';
 import { Booking, BookingStatus } from './entities/booking.entity';
@@ -17,11 +23,18 @@ export class BookingsService {
     private readonly servicesService: ServicesService,
   ) {}
 
-  async create(createBookingDto: CreateBookingDto, user?: User): Promise<Booking> {
+  async create(
+    createBookingDto: CreateBookingDto,
+    user?: User,
+  ): Promise<Booking> {
     // 1. Verify service exists and is active
-    const service = await this.servicesService.findOne(createBookingDto.serviceId);
+    const service = await this.servicesService.findOne(
+      createBookingDto.serviceId,
+    );
     if (!service.isActive) {
-      throw new BadRequestException(`Service "${service.title}" is currently inactive`);
+      throw new BadRequestException(
+        `Service "${service.title}" is currently inactive`,
+      );
     }
 
     // 2. Validate booking date & time is not in the past
@@ -35,7 +48,9 @@ export class BookingsService {
       const currentMin = now.getMinutes().toString().padStart(2, '0');
       const currentTimeStr = `${currentHour}:${currentMin}`;
       if (createBookingDto.bookingTime < currentTimeStr) {
-        throw new BadRequestException('Booking time slot cannot be in the past');
+        throw new BadRequestException(
+          'Booking time slot cannot be in the past',
+        );
       }
     }
 
@@ -138,19 +153,30 @@ export class BookingsService {
 
     // ENFORCE Access control check: Check ownership unless Admin
     if (user.role !== UserRole.ADMIN && booking.userId !== user.id) {
-      throw new ForbiddenException('You do not have permission to view this booking');
+      throw new ForbiddenException(
+        'You do not have permission to view this booking',
+      );
     }
 
     return booking;
   }
 
-  async updateStatus(id: string, updateBookingStatusDto: UpdateBookingStatusDto, user: User): Promise<Booking> {
+  async updateStatus(
+    id: string,
+    updateBookingStatusDto: UpdateBookingStatusDto,
+    user: User,
+  ): Promise<Booking> {
     const { status } = updateBookingStatusDto;
     const booking = await this.findOne(id, user); // findOne already enforces ownership check
 
     // Business rule: Cancelled bookings cannot be marked as completed
-    if (booking.status === BookingStatus.CANCELLED && status === BookingStatus.COMPLETED) {
-      throw new BadRequestException('Cancelled bookings cannot be marked as completed');
+    if (
+      booking.status === BookingStatus.CANCELLED &&
+      status === BookingStatus.COMPLETED
+    ) {
+      throw new BadRequestException(
+        'Cancelled bookings cannot be marked as completed',
+      );
     }
 
     booking.status = status;
@@ -168,11 +194,20 @@ export class BookingsService {
     return this.bookingsRepository.save(booking);
   }
 
-  async update(id: string, updateBookingDto: UpdateBookingDto, user: User): Promise<Booking> {
+  async update(
+    id: string,
+    updateBookingDto: UpdateBookingDto,
+    user: User,
+  ): Promise<Booking> {
     const booking = await this.findOne(id, user); // findOne already checks ownership
 
-    if (booking.status === BookingStatus.CANCELLED || booking.status === BookingStatus.COMPLETED) {
-      throw new BadRequestException('Cannot edit cancelled or completed bookings');
+    if (
+      booking.status === BookingStatus.CANCELLED ||
+      booking.status === BookingStatus.COMPLETED
+    ) {
+      throw new BadRequestException(
+        'Cannot edit cancelled or completed bookings',
+      );
     }
 
     if (updateBookingDto.bookingDate || updateBookingDto.bookingTime) {
@@ -190,7 +225,9 @@ export class BookingsService {
         const currentMin = now.getMinutes().toString().padStart(2, '0');
         const currentTimeStr = `${currentHour}:${currentMin}`;
         if (time < currentTimeStr) {
-          throw new BadRequestException('Rescheduled time slot cannot be in the past');
+          throw new BadRequestException(
+            'Rescheduled time slot cannot be in the past',
+          );
         }
       }
 
@@ -216,14 +253,20 @@ export class BookingsService {
     if (updateBookingDto.notes !== undefined) {
       booking.notes = updateBookingDto.notes;
     }
-    if (updateBookingDto.customerName) booking.customerName = updateBookingDto.customerName;
-    if (updateBookingDto.customerEmail) booking.customerEmail = updateBookingDto.customerEmail;
-    if (updateBookingDto.customerPhone) booking.customerPhone = updateBookingDto.customerPhone;
+    if (updateBookingDto.customerName)
+      booking.customerName = updateBookingDto.customerName;
+    if (updateBookingDto.customerEmail)
+      booking.customerEmail = updateBookingDto.customerEmail;
+    if (updateBookingDto.customerPhone)
+      booking.customerPhone = updateBookingDto.customerPhone;
 
     return this.bookingsRepository.save(booking);
   }
 
-  async claim(bookingIds: string[], user: User): Promise<{ claimedCount: number }> {
+  async claim(
+    bookingIds: string[],
+    user: User,
+  ): Promise<{ claimedCount: number }> {
     if (!bookingIds || bookingIds.length === 0) {
       return { claimedCount: 0 };
     }
@@ -268,11 +311,21 @@ export class BookingsService {
     const bookings = await query.getMany();
 
     const total = bookings.length;
-    const pending = bookings.filter(b => b.status === BookingStatus.PENDING).length;
-    const confirmed = bookings.filter(b => b.status === BookingStatus.CONFIRMED).length;
-    const completed = bookings.filter(b => b.status === BookingStatus.COMPLETED).length;
+    const pending = bookings.filter(
+      (b) => b.status === BookingStatus.PENDING,
+    ).length;
+    const confirmed = bookings.filter(
+      (b) => b.status === BookingStatus.CONFIRMED,
+    ).length;
+    const completed = bookings.filter(
+      (b) => b.status === BookingStatus.COMPLETED,
+    ).length;
     const estimatedRevenue = bookings
-      .filter(b => b.status === BookingStatus.CONFIRMED || b.status === BookingStatus.COMPLETED)
+      .filter(
+        (b) =>
+          b.status === BookingStatus.CONFIRMED ||
+          b.status === BookingStatus.COMPLETED,
+      )
       .reduce((sum, b) => sum + Number(b.service?.price || 0), 0);
 
     return {

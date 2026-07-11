@@ -1,4 +1,11 @@
-import { IsNotEmpty, IsString, IsEmail, MinLength, Matches, IsEnum } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsString,
+  IsEmail,
+  MinLength,
+  Matches,
+  IsEnum,
+} from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class RegisterUserDto {
@@ -7,7 +14,10 @@ export class RegisterUserDto {
   @IsString()
   username: string;
 
-  @ApiProperty({ description: 'Password (min 6 characters)', example: 'password123' })
+  @ApiProperty({
+    description: 'Password (min 6 characters)',
+    example: 'password123',
+  })
   @IsNotEmpty()
   @IsString()
   @MinLength(6, { message: 'Password must be at least 6 characters long' })
@@ -33,8 +43,13 @@ export class RegisterUserDto {
   @IsString()
   phoneNumber: string;
 
-  @ApiProperty({ description: 'Date of Birth (format: YYYY-MM-DD)', example: '1995-10-15' })
+  @ApiProperty({
+    description: 'Date of Birth (format: YYYY-MM-DD)',
+    example: '1995-10-15',
+  })
   @IsNotEmpty()
-  @Matches(/^\d{4}-\d{2}-\d{2}$/, { message: 'dob must be in YYYY-MM-DD format' })
+  @Matches(/^\d{4}-\d{2}-\d{2}$/, {
+    message: 'dob must be in YYYY-MM-DD format',
+  })
   dob: string;
 }

@@ -37,9 +37,15 @@ export class GlobalExceptionFilter implements ExceptionFilter {
         status = HttpStatus.BAD_REQUEST;
         message = 'Database query error';
       }
-      this.logger.error(`Database error (${err.code}): ${err.message}`, err.stack);
+      this.logger.error(
+        `Database error (${err.code}): ${err.message}`,
+        err.stack,
+      );
     } else {
-      this.logger.error(`Unhandled Exception: ${exception.message || exception}`, exception.stack);
+      this.logger.error(
+        `Unhandled Exception: ${exception.message || exception}`,
+        exception.stack,
+      );
     }
 
     response.status(status).json({

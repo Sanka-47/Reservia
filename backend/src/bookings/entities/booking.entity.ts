@@ -1,4 +1,13 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn, Index } from 'typeorm';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+  ManyToOne,
+  JoinColumn,
+  Index,
+} from 'typeorm';
 import { Service } from '../../services/entities/service.entity';
 import { User } from '../../users/entities/user.entity';
 
@@ -10,7 +19,11 @@ export enum BookingStatus {
 }
 
 @Entity('bookings')
-@Index('IDX_unique_active_booking', ['serviceId', 'bookingDate', 'bookingTime'], { unique: true, where: `"status" != 'CANCELLED'` })
+@Index(
+  'IDX_unique_active_booking',
+  ['serviceId', 'bookingDate', 'bookingTime'],
+  { unique: true, where: `"status" != 'CANCELLED'` },
+)
 export class Booking {
   @PrimaryGeneratedColumn('uuid')
   id: string;
