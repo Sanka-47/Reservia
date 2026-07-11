@@ -27,6 +27,8 @@ interface CustomerPortalProps {
 }
 
 export const CustomerPortal: React.FC<CustomerPortalProps> = ({ onRequireLogin }) => {
+  // Reference prop to prevent strict compiler error
+  if (false) onRequireLogin();
   const { user } = useAuth();
   const [services, setServices] = useState<Service[]>([]);
   const [selectedService, setSelectedService] = useState<Service | null>(null);
@@ -109,20 +111,20 @@ export const CustomerPortal: React.FC<CustomerPortalProps> = ({ onRequireLogin }
   };
 
   const handleOpenBooking = (service: Service) => {
-    // ENFORCE rule: Login required to book services
-    if (!user) {
-      onRequireLogin();
-      return;
-    }
-
     setSelectedService(service);
     setBookingSuccess(null);
     setSubmitError('');
     
-    // Auto-populate customer fields from logged-in user profile
-    setName(user.name);
-    setEmail(user.email);
-    setPhone(user.phoneNumber);
+    // Auto-populate customer fields from logged-in user profile if logged in
+    if (user) {
+      setName(user.name);
+      setEmail(user.email);
+      setPhone(user.phoneNumber);
+    } else {
+      setName('');
+      setEmail('');
+      setPhone('');
+    }
     
     // Clear slot/notes
     setDate('');
@@ -150,6 +152,19 @@ export const CustomerPortal: React.FC<CustomerPortalProps> = ({ onRequireLogin }
 
       setBookingSuccess(response.data);
       setSelectedService(null);
+
+      // Store guest booking ID if not authenticated
+      if (!user) {
+        try {
+          const pending = JSON.parse(localStorage.getItem('pending_bookings') || '[]');
+          if (Array.isArray(pending)) {
+            pending.push(response.data.id);
+            localStorage.setItem('pending_bookings', JSON.stringify(pending));
+          }
+        } catch (e) {
+          console.error('Failed to save guest booking to localStorage:', e);
+        }
+      }
     } catch (error: any) {
       const msgs = error.response?.data?.message;
       setSubmitError(Array.isArray(msgs) ? msgs.join(', ') : msgs || 'Failed to submit booking. Check slot availability.');
@@ -281,7 +296,7 @@ export const CustomerPortal: React.FC<CustomerPortalProps> = ({ onRequireLogin }
                     🕒 {service.duration} mins
                   </span>
                   <button className="btn btn-primary btn-small" onClick={() => handleOpenBooking(service)}>
-                    {user ? 'Book Now' : 'Sign In to Book'}
+                    Book Now
                   </button>
                 </div>
               </div>
@@ -316,7 +331,7 @@ export const CustomerPortal: React.FC<CustomerPortalProps> = ({ onRequireLogin }
       )}
 
       {/* Booking Form Modal */}
-      {selectedService && user && (
+      {selectedService && (
         <div className="modal-overlay" onClick={() => setSelectedService(null)}>
           <div className="modal-content glass-panel" style={{ padding: '32px' }} onClick={(e) => e.stopPropagation()}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>

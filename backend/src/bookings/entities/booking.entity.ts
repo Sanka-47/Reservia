@@ -1,4 +1,4 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn, Index } from 'typeorm';
 import { Service } from '../../services/entities/service.entity';
 import { User } from '../../users/entities/user.entity';
 
@@ -10,6 +10,7 @@ export enum BookingStatus {
 }
 
 @Entity('bookings')
+@Index('IDX_unique_active_booking', ['serviceId', 'bookingDate', 'bookingTime'], { unique: true, where: `"status" != 'CANCELLED'` })
 export class Booking {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -30,8 +31,8 @@ export class Booking {
   @JoinColumn({ name: 'serviceId' })
   service: Service;
 
-  @Column()
-  userId: string;
+  @Column({ nullable: true })
+  userId: string | null;
 
   @ManyToOne(() => User, { onDelete: 'CASCADE', eager: false })
   @JoinColumn({ name: 'userId' })

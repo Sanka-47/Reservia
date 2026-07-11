@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException, ConflictException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Not } from 'typeorm';
+import { Repository, Not, In, IsNull } from 'typeorm';
 import { Booking, BookingStatus } from './entities/booking.entity';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { UpdateBookingStatusDto } from './dto/update-booking-status.dto';
@@ -17,7 +17,7 @@ export class BookingsService {
     private readonly servicesService: ServicesService,
   ) {}
 
-  async create(createBookingDto: CreateBookingDto, user: User): Promise<Booking> {
+  async create(createBookingDto: CreateBookingDto, user?: User): Promise<Booking> {
     // 1. Verify service exists and is active
     const service = await this.servicesService.findOne(createBookingDto.serviceId);
     if (!service.isActive) {
@@ -47,9 +47,15 @@ export class BookingsService {
     }
 
     // 4. Populate customer info from session user if missing
-    const customerName = createBookingDto.customerName || user.name;
-    const customerEmail = createBookingDto.customerEmail || user.email;
-    const customerPhone = createBookingDto.customerPhone || user.phoneNumber;
+    const customerName = createBookingDto.customerName || user?.name;
+    const customerEmail = createBookingDto.customerEmail || user?.email;
+    const customerPhone = createBookingDto.customerPhone || user?.phoneNumber;
+
+    if (!customerName || !customerEmail || !customerPhone) {
+      throw new BadRequestException(
+        'Customer contact details (name, email, phone) are required for non-authenticated bookings.',
+      );
+    }
 
     // 5. Create and save booking
     const booking = this.bookingsRepository.create({
@@ -57,7 +63,7 @@ export class BookingsService {
       customerName,
       customerEmail,
       customerPhone,
-      userId: user.id,
+      userId: user ? user.id : null,
       status: BookingStatus.PENDING,
     });
 
@@ -197,5 +203,25 @@ export class BookingsService {
     if (updateBookingDto.customerPhone) booking.customerPhone = updateBookingDto.customerPhone;
 
     return this.bookingsRepository.save(booking);
+  }
+
+  async claim(bookingIds: string[], user: User): Promise<{ claimedCount: number }> {
+    if (!bookingIds || bookingIds.length === 0) {
+      return { claimedCount: 0 };
+    }
+
+    const bookings = await this.bookingsRepository.find({
+      where: {
+        id: In(bookingIds),
+        userId: IsNull(),
+      },
+    });
+
+    for (const booking of bookings) {
+      booking.userId = user.id;
+    }
+
+    await this.bookingsRepository.save(bookings);
+    return { claimedCount: bookings.length };
   }
 }

@@ -46,15 +46,18 @@ let BookingsService = class BookingsService {
         if (duplicate) {
             throw new common_1.ConflictException(`This timeslot (${createBookingDto.bookingTime}) is already booked for this service on ${createBookingDto.bookingDate}`);
         }
-        const customerName = createBookingDto.customerName || user.name;
-        const customerEmail = createBookingDto.customerEmail || user.email;
-        const customerPhone = createBookingDto.customerPhone || user.phoneNumber;
+        const customerName = createBookingDto.customerName || user?.name;
+        const customerEmail = createBookingDto.customerEmail || user?.email;
+        const customerPhone = createBookingDto.customerPhone || user?.phoneNumber;
+        if (!customerName || !customerEmail || !customerPhone) {
+            throw new common_1.BadRequestException('Customer contact details (name, email, phone) are required for non-authenticated bookings.');
+        }
         const booking = this.bookingsRepository.create({
             ...createBookingDto,
             customerName,
             customerEmail,
             customerPhone,
-            userId: user.id,
+            userId: user ? user.id : null,
             status: booking_entity_1.BookingStatus.PENDING,
         });
         const savedBooking = await this.bookingsRepository.save(booking);
@@ -160,6 +163,22 @@ let BookingsService = class BookingsService {
         if (updateBookingDto.customerPhone)
             booking.customerPhone = updateBookingDto.customerPhone;
         return this.bookingsRepository.save(booking);
+    }
+    async claim(bookingIds, user) {
+        if (!bookingIds || bookingIds.length === 0) {
+            return { claimedCount: 0 };
+        }
+        const bookings = await this.bookingsRepository.find({
+            where: {
+                id: (0, typeorm_2.In)(bookingIds),
+                userId: (0, typeorm_2.IsNull)(),
+            },
+        });
+        for (const booking of bookings) {
+            booking.userId = user.id;
+        }
+        await this.bookingsRepository.save(bookings);
+        return { claimedCount: bookings.length };
     }
 };
 exports.BookingsService = BookingsService;

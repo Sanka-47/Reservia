@@ -13,7 +13,7 @@ export declare class Booking {
     customerPhone: string;
     serviceId: string;
     service: Service;
-    userId: string;
+    userId: string | null;
     user: User;
     bookingDate: string;
     bookingTime: string;

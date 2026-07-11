@@ -10,7 +10,7 @@ export declare class BookingsService {
     private readonly bookingsRepository;
     private readonly servicesService;
     constructor(bookingsRepository: Repository<Booking>, servicesService: ServicesService);
-    create(createBookingDto: CreateBookingDto, user: User): Promise<Booking>;
+    create(createBookingDto: CreateBookingDto, user?: User): Promise<Booking>;
     findAll(filterDto: GetBookingsFilterDto, user: User): Promise<{
         data: Booking[];
         total: number;
@@ -22,4 +22,7 @@ export declare class BookingsService {
     updateStatus(id: string, updateBookingStatusDto: UpdateBookingStatusDto, user: User): Promise<Booking>;
     cancel(id: string, user: User): Promise<Booking>;
     update(id: string, updateBookingDto: UpdateBookingDto, user: User): Promise<Booking>;
+    claim(bookingIds: string[], user: User): Promise<{
+        claimedCount: number;
+    }>;
 }
