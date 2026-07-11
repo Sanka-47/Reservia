@@ -23,7 +23,12 @@ class GetBookingsFilterDto {
 }
 exports.GetBookingsFilterDto = GetBookingsFilterDto;
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Page number for pagination', example: 1, required: false, default: 1 }),
+    (0, swagger_1.ApiProperty)({
+        description: 'Page number for pagination',
+        example: 1,
+        required: false,
+        default: 1,
+    }),
     (0, class_validator_1.IsOptional)(),
     (0, class_transformer_1.Type)(() => Number),
     (0, class_validator_1.IsInt)(),
@@ -31,7 +36,12 @@ __decorate([
     __metadata("design:type", Number)
 ], GetBookingsFilterDto.prototype, "page", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Number of items per page', example: 10, required: false, default: 10 }),
+    (0, swagger_1.ApiProperty)({
+        description: 'Number of items per page',
+        example: 10,
+        required: false,
+        default: 10,
+    }),
     (0, class_validator_1.IsOptional)(),
     (0, class_transformer_1.Type)(() => Number),
     (0, class_validator_1.IsInt)(),
@@ -39,19 +49,31 @@ __decorate([
     __metadata("design:type", Number)
 ], GetBookingsFilterDto.prototype, "limit", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Filter by booking status', enum: booking_entity_1.BookingStatus, required: false }),
+    (0, swagger_1.ApiProperty)({
+        description: 'Filter by booking status',
+        enum: booking_entity_1.BookingStatus,
+        required: false,
+    }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsEnum)(booking_entity_1.BookingStatus),
     __metadata("design:type", String)
 ], GetBookingsFilterDto.prototype, "status", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Filter by service ID', example: '85e78c8c-1e24-4f81-9b4c-9f899e4f5a3b', required: false }),
+    (0, swagger_1.ApiProperty)({
+        description: 'Filter by service ID',
+        example: '85e78c8c-1e24-4f81-9b4c-9f899e4f5a3b',
+        required: false,
+    }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsUUID)(),
     __metadata("design:type", String)
 ], GetBookingsFilterDto.prototype, "serviceId", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Search term matching customer details or service title', example: 'Alice', required: false }),
+    (0, swagger_1.ApiProperty)({
+        description: 'Search term matching customer details or service title',
+        example: 'Alice',
+        required: false,
+    }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)

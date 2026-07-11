@@ -27,7 +27,7 @@ try {
       }
     }
   }
-} catch (e) {
+} catch {
   console.log('Error reading .env, using environment variables directly.');
 }
 

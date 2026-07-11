@@ -45,7 +45,10 @@ __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Register a new customer account' }),
     (0, swagger_1.ApiResponse)({ status: 201, description: 'User successfully registered.' }),
     (0, swagger_1.ApiResponse)({ status: 400, description: 'Invalid input details.' }),
-    (0, swagger_1.ApiResponse)({ status: 409, description: 'Username or email already exists.' }),
+    (0, swagger_1.ApiResponse)({
+        status: 409,
+        description: 'Username or email already exists.',
+    }),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [register_user_dto_1.RegisterUserDto]),

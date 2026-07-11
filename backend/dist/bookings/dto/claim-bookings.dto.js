@@ -17,7 +17,10 @@ class ClaimBookingsDto {
 }
 exports.ClaimBookingsDto = ClaimBookingsDto;
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Array of booking UUIDs to claim', example: ['85e78c8c-1e24-4f81-9b4c-9f899e4f5a3b'] }),
+    (0, swagger_1.ApiProperty)({
+        description: 'Array of booking UUIDs to claim',
+        example: ['85e78c8c-1e24-4f81-9b4c-9f899e4f5a3b'],
+    }),
     (0, class_validator_1.IsArray)(),
     (0, class_validator_1.IsUUID)('all', { each: true }),
     __metadata("design:type", Array)
