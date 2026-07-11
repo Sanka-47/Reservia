@@ -25,4 +25,11 @@ export declare class BookingsService {
     claim(bookingIds: string[], user: User): Promise<{
         claimedCount: number;
     }>;
+    getStats(filterDto: GetBookingsFilterDto): Promise<{
+        total: number;
+        pending: number;
+        confirmed: number;
+        completed: number;
+        estimatedRevenue: number;
+    }>;
 }

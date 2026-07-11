@@ -242,4 +242,45 @@ export class BookingsService {
     await this.bookingsRepository.save(bookings);
     return { claimedCount: bookings.length };
   }
+
+  async getStats(filterDto: GetBookingsFilterDto) {
+    const { status, serviceId, search } = filterDto;
+
+    const query = this.bookingsRepository
+      .createQueryBuilder('booking')
+      .leftJoinAndSelect('booking.service', 'service');
+
+    if (status) {
+      query.andWhere('booking.status = :status', { status });
+    }
+
+    if (serviceId) {
+      query.andWhere('booking.serviceId = :serviceId', { serviceId });
+    }
+
+    if (search) {
+      query.andWhere(
+        '(booking.customerName ILIKE :search OR booking.customerEmail ILIKE :search OR booking.customerPhone ILIKE :search OR service.title ILIKE :search)',
+        { search: `%${search}%` },
+      );
+    }
+
+    const bookings = await query.getMany();
+
+    const total = bookings.length;
+    const pending = bookings.filter(b => b.status === BookingStatus.PENDING).length;
+    const confirmed = bookings.filter(b => b.status === BookingStatus.CONFIRMED).length;
+    const completed = bookings.filter(b => b.status === BookingStatus.COMPLETED).length;
+    const estimatedRevenue = bookings
+      .filter(b => b.status === BookingStatus.CONFIRMED || b.status === BookingStatus.COMPLETED)
+      .reduce((sum, b) => sum + Number(b.service?.price || 0), 0);
+
+    return {
+      total,
+      pending,
+      confirmed,
+      completed,
+      estimatedRevenue,
+    };
+  }
 }

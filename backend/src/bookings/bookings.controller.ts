@@ -10,7 +10,9 @@ import {
   HttpCode,
   HttpStatus,
   Req,
+  ForbiddenException,
 } from '@nestjs/common';
+import { UserRole } from '../users/entities/user.entity';
 import { BookingsService } from './bookings.service';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { ClaimBookingsDto } from './dto/claim-bookings.dto';
@@ -48,6 +50,20 @@ export class BookingsController {
   @ApiResponse({ status: 401, description: 'Unauthorized.' })
   claim(@Body() claimBookingsDto: ClaimBookingsDto, @Req() req: any) {
     return this.bookingsService.claim(claimBookingsDto.bookingIds, req.user);
+  }
+
+  @Get('stats')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Get booking statistics (Admin Only)' })
+  @ApiResponse({ status: 200, description: 'Return booking stats.' })
+  @ApiResponse({ status: 401, description: 'Unauthorized.' })
+  @ApiResponse({ status: 403, description: 'Forbidden. Admin role required.' })
+  getStats(@Query() filterDto: GetBookingsFilterDto, @Req() req: any) {
+    if (req.user.role !== UserRole.ADMIN) {
+      throw new ForbiddenException('Only administrators can view statistics');
+    }
+    return this.bookingsService.getStats(filterDto);
   }
 
   @Get()

@@ -11,6 +11,13 @@ export declare class BookingsController {
     claim(claimBookingsDto: ClaimBookingsDto, req: any): Promise<{
         claimedCount: number;
     }>;
+    getStats(filterDto: GetBookingsFilterDto, req: any): Promise<{
+        total: number;
+        pending: number;
+        confirmed: number;
+        completed: number;
+        estimatedRevenue: number;
+    }>;
     findAll(filterDto: GetBookingsFilterDto, req: any): Promise<{
         data: import("./entities/booking.entity").Booking[];
         total: number;

@@ -78,9 +78,18 @@ export const AdminPortal: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
 
+  const [stats, setStats] = useState({
+    total: 0,
+    pending: 0,
+    confirmed: 0,
+    completed: 0,
+    estimatedRevenue: 0,
+  });
+
   useEffect(() => {
     fetchServices();
     fetchBookings();
+    fetchStats();
   }, [bookingsPage, searchQuery, statusFilter]);
 
   // Load services
@@ -112,14 +121,27 @@ export const AdminPortal: React.FC = () => {
     }
   };
 
+  // Load stats
+  const fetchStats = async () => {
+    try {
+      const response = await api.get('/bookings/stats', {
+        params: {
+          search: searchQuery || undefined,
+          status: statusFilter || undefined,
+        },
+      });
+      setStats(response.data);
+    } catch (e) {
+      console.error('Failed to load stats:', e);
+    }
+  };
+
   // Statistics summaries
-  const totalBookings = bookingsTotal;
-  const pendingCount = bookings.filter(b => b.status === 'PENDING').length;
-  const confirmedCount = bookings.filter(b => b.status === 'CONFIRMED').length;
-  const completedCount = bookings.filter(b => b.status === 'COMPLETED').length;
-  const estimatedRevenue = bookings
-    .filter(b => b.status === 'CONFIRMED' || b.status === 'COMPLETED')
-    .reduce((sum, b) => sum + Number(b.service?.price || 0), 0);
+  const totalBookings = stats.total;
+  const pendingCount = stats.pending;
+  const confirmedCount = stats.confirmed;
+  const completedCount = stats.completed;
+  const estimatedRevenue = stats.estimatedRevenue;
 
   // Manage Services Actions
   const handleOpenAddService = () => {
@@ -176,6 +198,7 @@ export const AdminPortal: React.FC = () => {
     try {
       await api.patch(`/bookings/${id}/status`, { status });
       fetchBookings();
+      fetchStats();
     } catch (err: any) {
       alert(err.response?.data?.message?.[0] || 'Failed to update booking status.');
     }
@@ -186,6 +209,7 @@ export const AdminPortal: React.FC = () => {
     try {
       await api.patch(`/bookings/${id}/cancel`);
       fetchBookings();
+      fetchStats();
     } catch (err: any) {
       alert(err.response?.data?.message?.[0] || 'Failed to cancel booking.');
     }
