@@ -37,6 +37,7 @@ exports.AppModule = AppModule = __decorate([
                     database: config.get('DB_DATABASE', 'reservia'),
                     autoLoadEntities: true,
                     synchronize: true,
+                    ssl: config.get('DB_SSL') === 'true' ? { rejectUnauthorized: false } : false,
                 }),
             }),
             users_module_1.UsersModule,
