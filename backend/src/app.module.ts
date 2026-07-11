@@ -25,6 +25,7 @@ import { BookingsModule } from './bookings/bookings.module';
         database: config.get<string>('DB_DATABASE', 'reservia'),
         autoLoadEntities: true,
         synchronize: true, // synchronize should be true for initial setup/dev db sync
+        ssl: config.get<string>('DB_SSL') === 'true' ? { rejectUnauthorized: false } : false,
       }),
     }),
     UsersModule,
