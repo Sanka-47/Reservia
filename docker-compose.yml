@@ -32,7 +32,6 @@ services:
       - DB_DATABASE=reservia
       - JWT_SECRET=super_secret_jwt_key_change_me
       - JWT_REFRESH_SECRET=super_secret_refresh_jwt_key_change_me
-      - GOOGLE_CLIENT_ID=your_google_client_id.apps.googleusercontent.com
     depends_on:
       - postgres
 
