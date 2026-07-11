@@ -34,9 +34,4 @@ export class ServicesService {
     Object.assign(service, updateServiceDto);
     return this.servicesRepository.save(service);
   }
-
-  async remove(id: string): Promise<void> {
-    const service = await this.findOne(id);
-    await this.servicesRepository.remove(service);
-  }
 }

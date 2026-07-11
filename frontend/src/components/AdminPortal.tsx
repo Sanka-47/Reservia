@@ -171,16 +171,6 @@ export const AdminPortal: React.FC = () => {
     }
   };
 
-  const handleDeleteService = async (id: string) => {
-    if (!window.confirm('Are you sure you want to delete this service?')) return;
-    try {
-      await api.delete(`/services/${id}`);
-      fetchServices();
-    } catch (err: any) {
-      alert(err.response?.data?.message?.[0] || 'Cannot delete service. Check if active bookings reference it.');
-    }
-  };
-
   // Manage Booking Actions
   const handleUpdateBookingStatus = async (id: string, status: 'CONFIRMED' | 'COMPLETED' | 'CANCELLED') => {
     try {
@@ -523,9 +513,6 @@ export const AdminPortal: React.FC = () => {
                         <div style={{ display: 'flex', gap: '6px', justifyContent: 'end' }}>
                           <button className="btn btn-secondary btn-small" onClick={() => handleOpenEditService(service)}>
                             Edit
-                          </button>
-                          <button className="btn btn-danger btn-small" onClick={() => handleDeleteService(service.id)}>
-                            Delete
                           </button>
                         </div>
                       </td>

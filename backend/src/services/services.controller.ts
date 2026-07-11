@@ -5,7 +5,6 @@ import {
   Body,
   Patch,
   Param,
-  Delete,
   UseGuards,
   HttpCode,
   HttpStatus,
@@ -75,26 +74,5 @@ export class ServicesController {
       throw new ForbiddenException('Only administrators can manage services');
     }
     return this.servicesService.update(id, updateServiceDto);
-  }
-
-  @Delete(':id')
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth('JWT-auth')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({ summary: 'Delete a service by ID (Admin Only)' })
-  @ApiParam({ name: 'id', description: 'The service UUID' })
-  @ApiResponse({ status: 204, description: 'Service successfully deleted.' })
-  @ApiResponse({ status: 401, description: 'Unauthorized.' })
-  @ApiResponse({ status: 403, description: 'Forbidden. Admin role required.' })
-  @ApiResponse({ status: 404, description: 'Service not found.' })
-  @ApiResponse({
-    status: 400,
-    description: 'Bad Request: Service cannot be deleted because it is referenced by existing bookings.',
-  })
-  remove(@Param('id') id: string, @Req() req: any) {
-    if (req.user.role !== UserRole.ADMIN) {
-      throw new ForbiddenException('Only administrators can manage services');
-    }
-    return this.servicesService.remove(id);
   }
 }

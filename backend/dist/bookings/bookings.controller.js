@@ -16,6 +16,7 @@ exports.BookingsController = void 0;
 const common_1 = require("@nestjs/common");
 const bookings_service_1 = require("./bookings.service");
 const create_booking_dto_1 = require("./dto/create-booking.dto");
+const claim_bookings_dto_1 = require("./dto/claim-bookings.dto");
 const update_booking_status_dto_1 = require("./dto/update-booking-status.dto");
 const update_booking_dto_1 = require("./dto/update-booking.dto");
 const get_bookings_filter_dto_1 = require("./dto/get-bookings-filter.dto");
@@ -28,6 +29,9 @@ let BookingsController = class BookingsController {
     }
     create(createBookingDto, req) {
         return this.bookingsService.create(createBookingDto, req.user);
+    }
+    claim(claimBookingsDto, req) {
+        return this.bookingsService.claim(claimBookingsDto.bookingIds, req.user);
     }
     findAll(filterDto, req) {
         return this.bookingsService.findAll(filterDto, req.user);
@@ -48,7 +52,7 @@ let BookingsController = class BookingsController {
 exports.BookingsController = BookingsController;
 __decorate([
     (0, common_1.Post)(),
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.OptionalJwtAuthGuard),
     (0, swagger_1.ApiBearerAuth)('JWT-auth'),
     (0, common_1.HttpCode)(common_1.HttpStatus.CREATED),
     (0, swagger_1.ApiOperation)({ summary: 'Create a new service booking (Authenticated Customer)' }),
@@ -63,6 +67,20 @@ __decorate([
     __metadata("design:paramtypes", [create_booking_dto_1.CreateBookingDto, Object]),
     __metadata("design:returntype", void 0)
 ], BookingsController.prototype, "create", null);
+__decorate([
+    (0, common_1.Post)('claim'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, swagger_1.ApiBearerAuth)('JWT-auth'),
+    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
+    (0, swagger_1.ApiOperation)({ summary: 'Claim guest bookings for the logged-in user' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Bookings successfully claimed.' }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized.' }),
+    __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [claim_bookings_dto_1.ClaimBookingsDto, Object]),
+    __metadata("design:returntype", void 0)
+], BookingsController.prototype, "claim", null);
 __decorate([
     (0, common_1.Get)(),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),

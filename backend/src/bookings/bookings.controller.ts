@@ -13,10 +13,11 @@ import {
 } from '@nestjs/common';
 import { BookingsService } from './bookings.service';
 import { CreateBookingDto } from './dto/create-booking.dto';
+import { ClaimBookingsDto } from './dto/claim-bookings.dto';
 import { UpdateBookingStatusDto } from './dto/update-booking-status.dto';
 import { UpdateBookingDto } from './dto/update-booking.dto';
 import { GetBookingsFilterDto } from './dto/get-bookings-filter.dto';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { JwtAuthGuard, OptionalJwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam } from '@nestjs/swagger';
 
 @ApiTags('Bookings')
@@ -25,7 +26,7 @@ export class BookingsController {
   constructor(private readonly bookingsService: BookingsService) {}
 
   @Post()
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(OptionalJwtAuthGuard)
   @ApiBearerAuth('JWT-auth')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Create a new service booking (Authenticated Customer)' })
@@ -36,6 +37,17 @@ export class BookingsController {
   @ApiResponse({ status: 409, description: 'Timeslot already booked.' })
   create(@Body() createBookingDto: CreateBookingDto, @Req() req: any) {
     return this.bookingsService.create(createBookingDto, req.user);
+  }
+
+  @Post('claim')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Claim guest bookings for the logged-in user' })
+  @ApiResponse({ status: 200, description: 'Bookings successfully claimed.' })
+  @ApiResponse({ status: 401, description: 'Unauthorized.' })
+  claim(@Body() claimBookingsDto: ClaimBookingsDto, @Req() req: any) {
+    return this.bookingsService.claim(claimBookingsDto.bookingIds, req.user);
   }
 
   @Get()

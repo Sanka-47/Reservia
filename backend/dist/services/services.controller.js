@@ -43,12 +43,6 @@ let ServicesController = class ServicesController {
         }
         return this.servicesService.update(id, updateServiceDto);
     }
-    remove(id, req) {
-        if (req.user.role !== user_entity_1.UserRole.ADMIN) {
-            throw new common_1.ForbiddenException('Only administrators can manage services');
-        }
-        return this.servicesService.remove(id);
-    }
 };
 exports.ServicesController = ServicesController;
 __decorate([
@@ -104,27 +98,6 @@ __decorate([
     __metadata("design:paramtypes", [String, update_service_dto_1.UpdateServiceDto, Object]),
     __metadata("design:returntype", void 0)
 ], ServicesController.prototype, "update", null);
-__decorate([
-    (0, common_1.Delete)(':id'),
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
-    (0, swagger_1.ApiBearerAuth)('JWT-auth'),
-    (0, common_1.HttpCode)(common_1.HttpStatus.NO_CONTENT),
-    (0, swagger_1.ApiOperation)({ summary: 'Delete a service by ID (Admin Only)' }),
-    (0, swagger_1.ApiParam)({ name: 'id', description: 'The service UUID' }),
-    (0, swagger_1.ApiResponse)({ status: 204, description: 'Service successfully deleted.' }),
-    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized.' }),
-    (0, swagger_1.ApiResponse)({ status: 403, description: 'Forbidden. Admin role required.' }),
-    (0, swagger_1.ApiResponse)({ status: 404, description: 'Service not found.' }),
-    (0, swagger_1.ApiResponse)({
-        status: 400,
-        description: 'Bad Request: Service cannot be deleted because it is referenced by existing bookings.',
-    }),
-    __param(0, (0, common_1.Param)('id')),
-    __param(1, (0, common_1.Req)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, Object]),
-    __metadata("design:returntype", void 0)
-], ServicesController.prototype, "remove", null);
 exports.ServicesController = ServicesController = __decorate([
     (0, swagger_1.ApiTags)('Services'),
     (0, common_1.Controller)('services'),

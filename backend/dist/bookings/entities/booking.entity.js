@@ -63,8 +63,8 @@ __decorate([
     __metadata("design:type", service_entity_1.Service)
 ], Booking.prototype, "service", void 0);
 __decorate([
-    (0, typeorm_1.Column)(),
-    __metadata("design:type", String)
+    (0, typeorm_1.Column)({ nullable: true }),
+    __metadata("design:type", Object)
 ], Booking.prototype, "userId", void 0);
 __decorate([
     (0, typeorm_1.ManyToOne)(() => user_entity_1.User, { onDelete: 'CASCADE', eager: false }),
@@ -100,6 +100,7 @@ __decorate([
     __metadata("design:type", Date)
 ], Booking.prototype, "updatedAt", void 0);
 exports.Booking = Booking = __decorate([
-    (0, typeorm_1.Entity)('bookings')
+    (0, typeorm_1.Entity)('bookings'),
+    (0, typeorm_1.Index)('IDX_unique_active_booking', ['serviceId', 'bookingDate', 'bookingTime'], { unique: true, where: `"status" != 'CANCELLED'` })
 ], Booking);
 //# sourceMappingURL=booking.entity.js.map

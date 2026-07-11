@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException, ConflictException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Not } from 'typeorm';
+import { Repository, Not, In, IsNull } from 'typeorm';
 import { Booking, BookingStatus } from './entities/booking.entity';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { UpdateBookingStatusDto } from './dto/update-booking-status.dto';
@@ -17,17 +17,26 @@ export class BookingsService {
     private readonly servicesService: ServicesService,
   ) {}
 
-  async create(createBookingDto: CreateBookingDto, user: User): Promise<Booking> {
+  async create(createBookingDto: CreateBookingDto, user?: User): Promise<Booking> {
     // 1. Verify service exists and is active
     const service = await this.servicesService.findOne(createBookingDto.serviceId);
     if (!service.isActive) {
       throw new BadRequestException(`Service "${service.title}" is currently inactive`);
     }
 
-    // 2. Validate booking date is not in the past
+    // 2. Validate booking date & time is not in the past
     const todayStr = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD local format
     if (createBookingDto.bookingDate < todayStr) {
       throw new BadRequestException('Booking date cannot be in the past');
+    }
+    if (createBookingDto.bookingDate === todayStr) {
+      const now = new Date();
+      const currentHour = now.getHours().toString().padStart(2, '0');
+      const currentMin = now.getMinutes().toString().padStart(2, '0');
+      const currentTimeStr = `${currentHour}:${currentMin}`;
+      if (createBookingDto.bookingTime < currentTimeStr) {
+        throw new BadRequestException('Booking time slot cannot be in the past');
+      }
     }
 
     // 3. Prevent duplicate bookings for the same service, date, and time
@@ -47,9 +56,15 @@ export class BookingsService {
     }
 
     // 4. Populate customer info from session user if missing
-    const customerName = createBookingDto.customerName || user.name;
-    const customerEmail = createBookingDto.customerEmail || user.email;
-    const customerPhone = createBookingDto.customerPhone || user.phoneNumber;
+    const customerName = createBookingDto.customerName || user?.name;
+    const customerEmail = createBookingDto.customerEmail || user?.email;
+    const customerPhone = createBookingDto.customerPhone || user?.phoneNumber;
+
+    if (!customerName || !customerEmail || !customerPhone) {
+      throw new BadRequestException(
+        'Customer contact details (name, email, phone) are required for non-authenticated bookings.',
+      );
+    }
 
     // 5. Create and save booking
     const booking = this.bookingsRepository.create({
@@ -57,7 +72,7 @@ export class BookingsService {
       customerName,
       customerEmail,
       customerPhone,
-      userId: user.id,
+      userId: user ? user.id : null,
       status: BookingStatus.PENDING,
     });
 
@@ -164,10 +179,19 @@ export class BookingsService {
       const date = updateBookingDto.bookingDate || booking.bookingDate;
       const time = updateBookingDto.bookingTime || booking.bookingTime;
 
-      // Validate date is not in the past
+      // Validate date & time is not in the past
       const todayStr = new Date().toLocaleDateString('en-CA');
       if (date < todayStr) {
         throw new BadRequestException('Rescheduled date cannot be in the past');
+      }
+      if (date === todayStr) {
+        const now = new Date();
+        const currentHour = now.getHours().toString().padStart(2, '0');
+        const currentMin = now.getMinutes().toString().padStart(2, '0');
+        const currentTimeStr = `${currentHour}:${currentMin}`;
+        if (time < currentTimeStr) {
+          throw new BadRequestException('Rescheduled time slot cannot be in the past');
+        }
       }
 
       // Check slot availability
@@ -197,5 +221,25 @@ export class BookingsService {
     if (updateBookingDto.customerPhone) booking.customerPhone = updateBookingDto.customerPhone;
 
     return this.bookingsRepository.save(booking);
+  }
+
+  async claim(bookingIds: string[], user: User): Promise<{ claimedCount: number }> {
+    if (!bookingIds || bookingIds.length === 0) {
+      return { claimedCount: 0 };
+    }
+
+    const bookings = await this.bookingsRepository.find({
+      where: {
+        id: In(bookingIds),
+        userId: IsNull(),
+      },
+    });
+
+    for (const booking of bookings) {
+      booking.userId = user.id;
+    }
+
+    await this.bookingsRepository.save(bookings);
+    return { claimedCount: bookings.length };
   }
 }

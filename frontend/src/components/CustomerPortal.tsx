@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
+import { DatePicker } from './DatePicker';
 
 interface Service {
   id: string;
@@ -26,6 +27,8 @@ interface CustomerPortalProps {
 }
 
 export const CustomerPortal: React.FC<CustomerPortalProps> = ({ onRequireLogin }) => {
+  // Reference prop to prevent strict compiler error
+  if (false) onRequireLogin();
   const { user } = useAuth();
   const [services, setServices] = useState<Service[]>([]);
   const [selectedService, setSelectedService] = useState<Service | null>(null);
@@ -82,7 +85,7 @@ export const CustomerPortal: React.FC<CustomerPortalProps> = ({ onRequireLogin }
   const [submitting, setSubmitting] = useState(false);
 
   // Generate 30-minute interval timeslots from 09:00 to 17:30
-  const timeSlots = [];
+  const timeSlots: string[] = [];
   for (let hour = 9; hour < 18; hour++) {
     const hh = hour.toString().padStart(2, '0');
     timeSlots.push(`${hh}:00`);
@@ -91,6 +94,17 @@ export const CustomerPortal: React.FC<CustomerPortalProps> = ({ onRequireLogin }
 
   // Set min date to today's date in YYYY-MM-DD format
   const today = new Date().toLocaleDateString('en-CA');
+
+  const getFilteredTimeSlots = () => {
+    if (date === today) {
+      const now = new Date();
+      const currentHour = now.getHours().toString().padStart(2, '0');
+      const currentMin = now.getMinutes().toString().padStart(2, '0');
+      const currentTimeStr = `${currentHour}:${currentMin}`;
+      return timeSlots.filter(slot => slot >= currentTimeStr);
+    }
+    return timeSlots;
+  };
 
   useEffect(() => {
     fetchServices();
@@ -108,20 +122,20 @@ export const CustomerPortal: React.FC<CustomerPortalProps> = ({ onRequireLogin }
   };
 
   const handleOpenBooking = (service: Service) => {
-    // ENFORCE rule: Login required to book services
-    if (!user) {
-      onRequireLogin();
-      return;
-    }
-
     setSelectedService(service);
     setBookingSuccess(null);
     setSubmitError('');
     
-    // Auto-populate customer fields from logged-in user profile
-    setName(user.name);
-    setEmail(user.email);
-    setPhone(user.phoneNumber);
+    // Auto-populate customer fields from logged-in user profile if logged in
+    if (user) {
+      setName(user.name);
+      setEmail(user.email);
+      setPhone(user.phoneNumber);
+    } else {
+      setName('');
+      setEmail('');
+      setPhone('');
+    }
     
     // Clear slot/notes
     setDate('');
@@ -149,6 +163,19 @@ export const CustomerPortal: React.FC<CustomerPortalProps> = ({ onRequireLogin }
 
       setBookingSuccess(response.data);
       setSelectedService(null);
+
+      // Store guest booking ID if not authenticated
+      if (!user) {
+        try {
+          const pending = JSON.parse(localStorage.getItem('pending_bookings') || '[]');
+          if (Array.isArray(pending)) {
+            pending.push(response.data.id);
+            localStorage.setItem('pending_bookings', JSON.stringify(pending));
+          }
+        } catch (e) {
+          console.error('Failed to save guest booking to localStorage:', e);
+        }
+      }
     } catch (error: any) {
       const msgs = error.response?.data?.message;
       setSubmitError(Array.isArray(msgs) ? msgs.join(', ') : msgs || 'Failed to submit booking. Check slot availability.');
@@ -280,7 +307,7 @@ export const CustomerPortal: React.FC<CustomerPortalProps> = ({ onRequireLogin }
                     🕒 {service.duration} mins
                   </span>
                   <button className="btn btn-primary btn-small" onClick={() => handleOpenBooking(service)}>
-                    {user ? 'Book Now' : 'Sign In to Book'}
+                    Book Now
                   </button>
                 </div>
               </div>
@@ -315,7 +342,7 @@ export const CustomerPortal: React.FC<CustomerPortalProps> = ({ onRequireLogin }
       )}
 
       {/* Booking Form Modal */}
-      {selectedService && user && (
+      {selectedService && (
         <div className="modal-overlay" onClick={() => setSelectedService(null)}>
           <div className="modal-content glass-panel" style={{ padding: '32px' }} onClick={(e) => e.stopPropagation()}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
@@ -375,13 +402,11 @@ export const CustomerPortal: React.FC<CustomerPortalProps> = ({ onRequireLogin }
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                 <div className="form-group">
                   <label className="form-label">Date</label>
-                  <input 
-                    type="date" 
-                    className="form-input" 
+                  <DatePicker 
+                    value={date}
+                    onChange={setDate}
                     min={today}
                     required 
-                    value={date}
-                    onChange={e => setDate(e.target.value)}
                   />
                 </div>
                 <div className="form-group">
@@ -393,7 +418,7 @@ export const CustomerPortal: React.FC<CustomerPortalProps> = ({ onRequireLogin }
                     onChange={e => setTime(e.target.value)}
                   >
                     <option value="">Select a time</option>
-                    {timeSlots.map(t => (
+                    {getFilteredTimeSlots().map(t => (
                       <option key={t} value={t}>{t}</option>
                     ))}
                   </select>

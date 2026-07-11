@@ -8,5 +8,4 @@ export declare class ServicesController {
     findAll(): Promise<import("./entities/service.entity").Service[]>;
     findOne(id: string): Promise<import("./entities/service.entity").Service>;
     update(id: string, updateServiceDto: UpdateServiceDto, req: any): Promise<import("./entities/service.entity").Service>;
-    remove(id: string, req: any): Promise<void>;
 }

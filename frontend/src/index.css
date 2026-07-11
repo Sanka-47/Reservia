@@ -292,3 +292,10 @@ h1, h2, h3, h4, h5, h6 {
   display: flex;
   gap: 16px;
 }
+
+/* Custom DatePicker styles */
+.date-picker-day-hover:hover {
+  background: rgba(168, 85, 247, 0.2) !important;
+  color: var(--primary-light) !important;
+}
+

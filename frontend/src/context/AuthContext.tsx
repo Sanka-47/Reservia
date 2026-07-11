@@ -46,6 +46,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, []);
 
+  // Claim pending guest bookings when user logs in/registers
+  useEffect(() => {
+    const claimPendingBookings = async () => {
+      if (!user) return;
+      const pendingStr = localStorage.getItem('pending_bookings');
+      if (pendingStr) {
+        try {
+          const bookingIds = JSON.parse(pendingStr);
+          if (Array.isArray(bookingIds) && bookingIds.length > 0) {
+            await api.post('/bookings/claim', { bookingIds });
+          }
+        } catch (e) {
+          console.error('Failed to claim pending bookings:', e);
+        } finally {
+          localStorage.removeItem('pending_bookings');
+        }
+      }
+    };
+
+    claimPendingBookings();
+  }, [user]);
+
   const login = async (username: string, password: string) => {
     try {
       const response = await api.post('/auth/login', { username, password });
