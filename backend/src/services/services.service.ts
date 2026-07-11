@@ -29,7 +29,10 @@ export class ServicesService {
     return service;
   }
 
-  async update(id: string, updateServiceDto: UpdateServiceDto): Promise<Service> {
+  async update(
+    id: string,
+    updateServiceDto: UpdateServiceDto,
+  ): Promise<Service> {
     const service = await this.findOne(id);
     Object.assign(service, updateServiceDto);
     return this.servicesRepository.save(service);

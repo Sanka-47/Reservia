@@ -97,7 +97,7 @@ const MainApp: React.FC = () => {
       {/* Main Content Area */}
       <main style={{ minHeight: '80vh', paddingBottom: '60px' }}>
         {view === 'customer' && (
-          <CustomerPortal onRequireLogin={() => setView('auth')} />
+          <CustomerPortal />
         )}
 
         {view === 'bookings' && user && user.role === 'CUSTOMER' && (

@@ -61,7 +61,7 @@ try {
         }
     }
 }
-catch (e) {
+catch {
     console.log('Error reading .env, using environment variables directly.');
 }
 const hashPassword = (password) => {
@@ -93,7 +93,10 @@ async function main() {
         (gen_random_uuid(), 'jane_smith', $2, 'jane.smith@example.com', 'Jane Smith', 'Female', '+1555987654', '1992-10-20', 'CUSTOMER')
       RETURNING id, username;
     `;
-        const userRes = await client.query(userInsertQuery, [adminPassHash, customerPassHash]);
+        const userRes = await client.query(userInsertQuery, [
+            adminPassHash,
+            customerPassHash,
+        ]);
         const usersMap = {};
         for (const r of userRes.rows) {
             usersMap[r.username] = r.id;

@@ -22,13 +22,7 @@ interface BookingResponse {
   };
 }
 
-interface CustomerPortalProps {
-  onRequireLogin: () => void;
-}
-
-export const CustomerPortal: React.FC<CustomerPortalProps> = ({ onRequireLogin }) => {
-  // Reference prop to prevent strict compiler error
-  if (false) onRequireLogin();
+export const CustomerPortal: React.FC = () => {
   const { user } = useAuth();
   const [services, setServices] = useState<Service[]>([]);
   const [selectedService, setSelectedService] = useState<Service | null>(null);

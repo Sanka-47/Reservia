@@ -14,6 +14,7 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.BookingsController = void 0;
 const common_1 = require("@nestjs/common");
+const user_entity_1 = require("../users/entities/user.entity");
 const bookings_service_1 = require("./bookings.service");
 const create_booking_dto_1 = require("./dto/create-booking.dto");
 const claim_bookings_dto_1 = require("./dto/claim-bookings.dto");
@@ -32,6 +33,12 @@ let BookingsController = class BookingsController {
     }
     claim(claimBookingsDto, req) {
         return this.bookingsService.claim(claimBookingsDto.bookingIds, req.user);
+    }
+    getStats(filterDto, req) {
+        if (req.user.role !== user_entity_1.UserRole.ADMIN) {
+            throw new common_1.ForbiddenException('Only administrators can view statistics');
+        }
+        return this.bookingsService.getStats(filterDto);
     }
     findAll(filterDto, req) {
         return this.bookingsService.findAll(filterDto, req.user);
@@ -55,9 +62,14 @@ __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.OptionalJwtAuthGuard),
     (0, swagger_1.ApiBearerAuth)('JWT-auth'),
     (0, common_1.HttpCode)(common_1.HttpStatus.CREATED),
-    (0, swagger_1.ApiOperation)({ summary: 'Create a new service booking (Authenticated Customer)' }),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Create a new service booking (Authenticated Customer)',
+    }),
     (0, swagger_1.ApiResponse)({ status: 201, description: 'Booking successfully created.' }),
-    (0, swagger_1.ApiResponse)({ status: 400, description: 'Invalid details or date is in the past.' }),
+    (0, swagger_1.ApiResponse)({
+        status: 400,
+        description: 'Invalid details or date is in the past.',
+    }),
     (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized.' }),
     (0, swagger_1.ApiResponse)({ status: 404, description: 'Service not found.' }),
     (0, swagger_1.ApiResponse)({ status: 409, description: 'Timeslot already booked.' }),
@@ -82,10 +94,26 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], BookingsController.prototype, "claim", null);
 __decorate([
+    (0, common_1.Get)('stats'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, swagger_1.ApiBearerAuth)('JWT-auth'),
+    (0, swagger_1.ApiOperation)({ summary: 'Get booking statistics (Admin Only)' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Return booking stats.' }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized.' }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Forbidden. Admin role required.' }),
+    __param(0, (0, common_1.Query)()),
+    __param(1, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [get_bookings_filter_dto_1.GetBookingsFilterDto, Object]),
+    __metadata("design:returntype", void 0)
+], BookingsController.prototype, "getStats", null);
+__decorate([
     (0, common_1.Get)(),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, swagger_1.ApiBearerAuth)('JWT-auth'),
-    (0, swagger_1.ApiOperation)({ summary: 'Get bookings list. Customers see their own; Admins see all. (Authenticated)' }),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Get bookings list. Customers see their own; Admins see all. (Authenticated)',
+    }),
     (0, swagger_1.ApiResponse)({ status: 200, description: 'Return paginated bookings list.' }),
     (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized.' }),
     __param(0, (0, common_1.Query)()),
@@ -98,7 +126,9 @@ __decorate([
     (0, common_1.Get)(':id'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, swagger_1.ApiBearerAuth)('JWT-auth'),
-    (0, swagger_1.ApiOperation)({ summary: 'Get a specific booking details (Authenticated owner or admin)' }),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Get a specific booking details (Authenticated owner or admin)',
+    }),
     (0, swagger_1.ApiParam)({ name: 'id', description: 'The booking UUID' }),
     (0, swagger_1.ApiResponse)({ status: 200, description: 'Return the booking details.' }),
     (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized.' }),
@@ -114,10 +144,18 @@ __decorate([
     (0, common_1.Patch)(':id/status'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, swagger_1.ApiBearerAuth)('JWT-auth'),
-    (0, swagger_1.ApiOperation)({ summary: 'Update a booking status (Authenticated owner or admin)' }),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Update a booking status (Authenticated owner or admin)',
+    }),
     (0, swagger_1.ApiParam)({ name: 'id', description: 'The booking UUID' }),
-    (0, swagger_1.ApiResponse)({ status: 200, description: 'Booking status successfully updated.' }),
-    (0, swagger_1.ApiResponse)({ status: 400, description: 'Invalid request or invalid status transition.' }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: 'Booking status successfully updated.',
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: 400,
+        description: 'Invalid request or invalid status transition.',
+    }),
     (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized.' }),
     (0, swagger_1.ApiResponse)({ status: 403, description: 'Forbidden. No ownership.' }),
     (0, swagger_1.ApiResponse)({ status: 404, description: 'Booking not found.' }),
@@ -148,10 +186,18 @@ __decorate([
     (0, common_1.Patch)(':id'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, swagger_1.ApiBearerAuth)('JWT-auth'),
-    (0, swagger_1.ApiOperation)({ summary: 'Reschedule or edit a booking (Authenticated owner or admin)' }),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Reschedule or edit a booking (Authenticated owner or admin)',
+    }),
     (0, swagger_1.ApiParam)({ name: 'id', description: 'The booking UUID' }),
-    (0, swagger_1.ApiResponse)({ status: 200, description: 'Booking successfully updated/rescheduled.' }),
-    (0, swagger_1.ApiResponse)({ status: 400, description: 'Invalid date/time or status constraints.' }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: 'Booking successfully updated/rescheduled.',
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: 400,
+        description: 'Invalid date/time or status constraints.',
+    }),
     (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized.' }),
     (0, swagger_1.ApiResponse)({ status: 403, description: 'Forbidden. No ownership.' }),
     (0, swagger_1.ApiResponse)({ status: 404, description: 'Booking not found.' }),

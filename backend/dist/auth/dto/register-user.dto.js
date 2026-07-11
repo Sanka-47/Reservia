@@ -29,7 +29,10 @@ __decorate([
     __metadata("design:type", String)
 ], RegisterUserDto.prototype, "username", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Password (min 6 characters)', example: 'password123' }),
+    (0, swagger_1.ApiProperty)({
+        description: 'Password (min 6 characters)',
+        example: 'password123',
+    }),
     (0, class_validator_1.IsNotEmpty)(),
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.MinLength)(6, { message: 'Password must be at least 6 characters long' }),
@@ -60,9 +63,14 @@ __decorate([
     __metadata("design:type", String)
 ], RegisterUserDto.prototype, "phoneNumber", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Date of Birth (format: YYYY-MM-DD)', example: '1995-10-15' }),
+    (0, swagger_1.ApiProperty)({
+        description: 'Date of Birth (format: YYYY-MM-DD)',
+        example: '1995-10-15',
+    }),
     (0, class_validator_1.IsNotEmpty)(),
-    (0, class_validator_1.Matches)(/^\d{4}-\d{2}-\d{2}$/, { message: 'dob must be in YYYY-MM-DD format' }),
+    (0, class_validator_1.Matches)(/^\d{4}-\d{2}-\d{2}$/, {
+        message: 'dob must be in YYYY-MM-DD format',
+    }),
     __metadata("design:type", String)
 ], RegisterUserDto.prototype, "dob", void 0);
 //# sourceMappingURL=register-user.dto.js.map

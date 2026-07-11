@@ -1,4 +1,8 @@
-import { Injectable, ConflictException, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  ConflictException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { UsersService } from '../users/users.service';
@@ -23,7 +27,8 @@ export class AuthService {
   }
 
   async register(registerDto: RegisterUserDto) {
-    const { username, password, email, name, gender, phoneNumber, dob } = registerDto;
+    const { username, password, email, name, gender, phoneNumber, dob } =
+      registerDto;
 
     // Check if username already exists
     let existing = await this.usersService.findOneByUsername(username);
@@ -98,16 +103,20 @@ export class AuthService {
 
   private async generateTokensResponse(user: User) {
     const payload = { sub: user.id, username: user.username, role: user.role };
-    
+
     const accessToken = await this.jwtService.signAsync(payload, {
-      secret: this.configService.get<string>('JWT_SECRET') ?? 'super_secret_jwt_key_change_me',
+      secret:
+        this.configService.get<string>('JWT_SECRET') ??
+        'super_secret_jwt_key_change_me',
       expiresIn: '15m',
     });
 
     const refreshToken = await this.jwtService.signAsync(
       { sub: user.id },
       {
-        secret: this.configService.get<string>('JWT_REFRESH_SECRET') ?? 'super_secret_refresh_jwt_key_change_me',
+        secret:
+          this.configService.get<string>('JWT_REFRESH_SECRET') ??
+          'super_secret_refresh_jwt_key_change_me',
         expiresIn: '7d',
       },
     );

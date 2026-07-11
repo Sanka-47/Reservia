@@ -18,10 +18,7 @@ let BookingsModule = class BookingsModule {
 exports.BookingsModule = BookingsModule;
 exports.BookingsModule = BookingsModule = __decorate([
     (0, common_1.Module)({
-        imports: [
-            typeorm_1.TypeOrmModule.forFeature([booking_entity_1.Booking]),
-            services_module_1.ServicesModule,
-        ],
+        imports: [typeorm_1.TypeOrmModule.forFeature([booking_entity_1.Booking]), services_module_1.ServicesModule],
         controllers: [bookings_controller_1.BookingsController],
         providers: [bookings_service_1.BookingsService],
         exports: [bookings_service_1.BookingsService],

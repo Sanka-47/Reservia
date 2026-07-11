@@ -27,7 +27,7 @@ try {
       }
     }
   }
-} catch (e) {
+} catch {
   console.log('Error reading .env, using environment variables directly.');
 }
 
@@ -68,7 +68,10 @@ async function main() {
       RETURNING id, username;
     `;
 
-    const userRes = await client.query(userInsertQuery, [adminPassHash, customerPassHash]);
+    const userRes = await client.query(userInsertQuery, [
+      adminPassHash,
+      customerPassHash,
+    ]);
     const usersMap: { [username: string]: string } = {};
     for (const r of userRes.rows) {
       usersMap[r.username] = r.id;

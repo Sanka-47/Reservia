@@ -121,7 +121,8 @@ let BookingsService = class BookingsService {
     async updateStatus(id, updateBookingStatusDto, user) {
         const { status } = updateBookingStatusDto;
         const booking = await this.findOne(id, user);
-        if (booking.status === booking_entity_1.BookingStatus.CANCELLED && status === booking_entity_1.BookingStatus.COMPLETED) {
+        if (booking.status === booking_entity_1.BookingStatus.CANCELLED &&
+            status === booking_entity_1.BookingStatus.COMPLETED) {
             throw new common_1.BadRequestException('Cancelled bookings cannot be marked as completed');
         }
         booking.status = status;
@@ -137,7 +138,8 @@ let BookingsService = class BookingsService {
     }
     async update(id, updateBookingDto, user) {
         const booking = await this.findOne(id, user);
-        if (booking.status === booking_entity_1.BookingStatus.CANCELLED || booking.status === booking_entity_1.BookingStatus.COMPLETED) {
+        if (booking.status === booking_entity_1.BookingStatus.CANCELLED ||
+            booking.status === booking_entity_1.BookingStatus.COMPLETED) {
             throw new common_1.BadRequestException('Cannot edit cancelled or completed bookings');
         }
         if (updateBookingDto.bookingDate || updateBookingDto.bookingTime) {
@@ -197,6 +199,37 @@ let BookingsService = class BookingsService {
         }
         await this.bookingsRepository.save(bookings);
         return { claimedCount: bookings.length };
+    }
+    async getStats(filterDto) {
+        const { status, serviceId, search } = filterDto;
+        const query = this.bookingsRepository
+            .createQueryBuilder('booking')
+            .leftJoinAndSelect('booking.service', 'service');
+        if (status) {
+            query.andWhere('booking.status = :status', { status });
+        }
+        if (serviceId) {
+            query.andWhere('booking.serviceId = :serviceId', { serviceId });
+        }
+        if (search) {
+            query.andWhere('(booking.customerName ILIKE :search OR booking.customerEmail ILIKE :search OR booking.customerPhone ILIKE :search OR service.title ILIKE :search)', { search: `%${search}%` });
+        }
+        const bookings = await query.getMany();
+        const total = bookings.length;
+        const pending = bookings.filter((b) => b.status === booking_entity_1.BookingStatus.PENDING).length;
+        const confirmed = bookings.filter((b) => b.status === booking_entity_1.BookingStatus.CONFIRMED).length;
+        const completed = bookings.filter((b) => b.status === booking_entity_1.BookingStatus.COMPLETED).length;
+        const estimatedRevenue = bookings
+            .filter((b) => b.status === booking_entity_1.BookingStatus.CONFIRMED ||
+            b.status === booking_entity_1.BookingStatus.COMPLETED)
+            .reduce((sum, b) => sum + Number(b.service?.price || 0), 0);
+        return {
+            total,
+            pending,
+            confirmed,
+            completed,
+            estimatedRevenue,
+        };
     }
 };
 exports.BookingsService = BookingsService;

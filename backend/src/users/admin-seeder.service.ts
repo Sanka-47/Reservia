@@ -28,7 +28,9 @@ export class AdminSeederService implements OnApplicationBootstrap {
           dob: '1970-01-01',
           role: UserRole.ADMIN,
         });
-        this.logger.log('Default administrator user seeded successfully (username=admin, password=admin)');
+        this.logger.log(
+          'Default administrator user seeded successfully (username=admin, password=admin)',
+        );
       } else {
         this.logger.log('Administrator user already exists. Skipping seed.');
       }

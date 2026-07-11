@@ -21,31 +21,44 @@ class CreateServiceDto {
 }
 exports.CreateServiceDto = CreateServiceDto;
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'The title of the service', example: 'Haircut & Styling' }),
+    (0, swagger_1.ApiProperty)({
+        description: 'The title of the service',
+        example: 'Haircut & Styling',
+    }),
     (0, class_validator_1.IsNotEmpty)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], CreateServiceDto.prototype, "title", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Description of the service', example: 'A professional haircut including wash and dry.' }),
+    (0, swagger_1.ApiProperty)({
+        description: 'Description of the service',
+        example: 'A professional haircut including wash and dry.',
+    }),
     (0, class_validator_1.IsNotEmpty)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], CreateServiceDto.prototype, "description", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Duration of the service in minutes', example: 45 }),
+    (0, swagger_1.ApiProperty)({
+        description: 'Duration of the service in minutes',
+        example: 45,
+    }),
     (0, class_validator_1.IsInt)(),
     (0, class_validator_1.IsPositive)(),
     __metadata("design:type", Number)
 ], CreateServiceDto.prototype, "duration", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Price of the service', example: 35.50 }),
+    (0, swagger_1.ApiProperty)({ description: 'Price of the service', example: 35.5 }),
     (0, class_validator_1.IsNumber)({ maxDecimalPlaces: 2 }),
     (0, class_validator_1.IsPositive)(),
     __metadata("design:type", Number)
 ], CreateServiceDto.prototype, "price", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Whether the service is active and bookable', example: true, required: false }),
+    (0, swagger_1.ApiProperty)({
+        description: 'Whether the service is active and bookable',
+        example: true,
+        required: false,
+    }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsBoolean)(),
     __metadata("design:type", Boolean)

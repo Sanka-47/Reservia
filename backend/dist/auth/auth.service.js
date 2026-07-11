@@ -125,11 +125,13 @@ let AuthService = class AuthService {
     async generateTokensResponse(user) {
         const payload = { sub: user.id, username: user.username, role: user.role };
         const accessToken = await this.jwtService.signAsync(payload, {
-            secret: this.configService.get('JWT_SECRET') ?? 'super_secret_jwt_key_change_me',
+            secret: this.configService.get('JWT_SECRET') ??
+                'super_secret_jwt_key_change_me',
             expiresIn: '15m',
         });
         const refreshToken = await this.jwtService.signAsync({ sub: user.id }, {
-            secret: this.configService.get('JWT_REFRESH_SECRET') ?? 'super_secret_refresh_jwt_key_change_me',
+            secret: this.configService.get('JWT_REFRESH_SECRET') ??
+                'super_secret_refresh_jwt_key_change_me',
             expiresIn: '7d',
         });
         const refreshTokenHash = this.hashToken(refreshToken);

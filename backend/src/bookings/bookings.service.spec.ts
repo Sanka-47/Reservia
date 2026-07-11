@@ -5,7 +5,11 @@ import { BookingsService } from './bookings.service';
 import { Booking, BookingStatus } from './entities/booking.entity';
 import { ServicesService } from '../services/services.service';
 import { User, UserRole } from '../users/entities/user.entity';
-import { BadRequestException, ConflictException, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common';
 
 describe('BookingsService', () => {
   let service: BookingsService;
@@ -14,7 +18,11 @@ describe('BookingsService', () => {
 
   const mockBookingRepository = {
     create: jest.fn().mockImplementation((dto) => dto),
-    save: jest.fn().mockImplementation((booking) => Promise.resolve({ id: 'booking-id', ...booking })),
+    save: jest
+      .fn()
+      .mockImplementation((booking) =>
+        Promise.resolve({ id: 'booking-id', ...booking }),
+      ),
     findOne: jest.fn(),
   };
 
@@ -53,7 +61,9 @@ describe('BookingsService', () => {
     }).compile();
 
     service = module.get<BookingsService>(BookingsService);
-    bookingsRepository = module.get<Repository<Booking>>(getRepositoryToken(Booking));
+    bookingsRepository = module.get<Repository<Booking>>(
+      getRepositoryToken(Booking),
+    );
     servicesService = module.get<ServicesService>(ServicesService);
   });
 
@@ -67,7 +77,9 @@ describe('BookingsService', () => {
 
   describe('create', () => {
     it('should throw NotFoundException if service does not exist', async () => {
-      mockServicesService.findOne.mockRejectedValue(new NotFoundException('Service not found'));
+      mockServicesService.findOne.mockRejectedValue(
+        new NotFoundException('Service not found'),
+      );
 
       const dto = {
         customerName: 'John Doe',
@@ -78,11 +90,17 @@ describe('BookingsService', () => {
         bookingTime: '10:00',
       };
 
-      await expect(service.create(dto, mockUser)).rejects.toThrow(NotFoundException);
+      await expect(service.create(dto, mockUser)).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should throw BadRequestException if service is inactive', async () => {
-      mockServicesService.findOne.mockResolvedValue({ id: 'service-id', title: 'Test Service', isActive: false });
+      mockServicesService.findOne.mockResolvedValue({
+        id: 'service-id',
+        title: 'Test Service',
+        isActive: false,
+      });
 
       const dto = {
         customerName: 'John Doe',
@@ -93,11 +111,17 @@ describe('BookingsService', () => {
         bookingTime: '10:00',
       };
 
-      await expect(service.create(dto, mockUser)).rejects.toThrow(BadRequestException);
+      await expect(service.create(dto, mockUser)).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('should throw BadRequestException if booking date is in the past', async () => {
-      mockServicesService.findOne.mockResolvedValue({ id: 'service-id', title: 'Test Service', isActive: true });
+      mockServicesService.findOne.mockResolvedValue({
+        id: 'service-id',
+        title: 'Test Service',
+        isActive: true,
+      });
 
       const dto = {
         customerName: 'John Doe',
@@ -108,12 +132,20 @@ describe('BookingsService', () => {
         bookingTime: '10:00',
       };
 
-      await expect(service.create(dto, mockUser)).rejects.toThrow(BadRequestException);
+      await expect(service.create(dto, mockUser)).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('should throw ConflictException if duplicate booking exists', async () => {
-      mockServicesService.findOne.mockResolvedValue({ id: 'service-id', title: 'Test Service', isActive: true });
-      mockBookingRepository.findOne.mockResolvedValue({ id: 'existing-booking-id' });
+      mockServicesService.findOne.mockResolvedValue({
+        id: 'service-id',
+        title: 'Test Service',
+        isActive: true,
+      });
+      mockBookingRepository.findOne.mockResolvedValue({
+        id: 'existing-booking-id',
+      });
 
       const dto = {
         customerName: 'John Doe',
@@ -124,11 +156,17 @@ describe('BookingsService', () => {
         bookingTime: '10:00',
       };
 
-      await expect(service.create(dto, mockUser)).rejects.toThrow(ConflictException);
+      await expect(service.create(dto, mockUser)).rejects.toThrow(
+        ConflictException,
+      );
     });
 
     it('should create booking if all business rules pass', async () => {
-      mockServicesService.findOne.mockResolvedValue({ id: 'service-id', title: 'Test Service', isActive: true });
+      mockServicesService.findOne.mockResolvedValue({
+        id: 'service-id',
+        title: 'Test Service',
+        isActive: true,
+      });
       mockBookingRepository.findOne.mockResolvedValue(null);
 
       const dto = {
@@ -158,7 +196,11 @@ describe('BookingsService', () => {
       mockBookingRepository.findOne.mockResolvedValue(existingBooking);
 
       await expect(
-        service.updateStatus('booking-id', { status: BookingStatus.COMPLETED }, mockUser),
+        service.updateStatus(
+          'booking-id',
+          { status: BookingStatus.COMPLETED },
+          mockUser,
+        ),
       ).rejects.toThrow(BadRequestException);
     });
 
@@ -172,7 +214,11 @@ describe('BookingsService', () => {
       mockBookingRepository.findOne.mockResolvedValue(existingBooking);
       mockBookingRepository.save.mockImplementation((b) => Promise.resolve(b));
 
-      const result = await service.updateStatus('booking-id', { status: BookingStatus.CONFIRMED }, mockUser);
+      const result = await service.updateStatus(
+        'booking-id',
+        { status: BookingStatus.CONFIRMED },
+        mockUser,
+      );
       expect(result.status).toBe(BookingStatus.CONFIRMED);
     });
   });
