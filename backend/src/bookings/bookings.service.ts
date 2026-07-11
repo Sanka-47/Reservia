@@ -24,10 +24,19 @@ export class BookingsService {
       throw new BadRequestException(`Service "${service.title}" is currently inactive`);
     }
 
-    // 2. Validate booking date is not in the past
+    // 2. Validate booking date & time is not in the past
     const todayStr = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD local format
     if (createBookingDto.bookingDate < todayStr) {
       throw new BadRequestException('Booking date cannot be in the past');
+    }
+    if (createBookingDto.bookingDate === todayStr) {
+      const now = new Date();
+      const currentHour = now.getHours().toString().padStart(2, '0');
+      const currentMin = now.getMinutes().toString().padStart(2, '0');
+      const currentTimeStr = `${currentHour}:${currentMin}`;
+      if (createBookingDto.bookingTime < currentTimeStr) {
+        throw new BadRequestException('Booking time slot cannot be in the past');
+      }
     }
 
     // 3. Prevent duplicate bookings for the same service, date, and time
@@ -170,10 +179,19 @@ export class BookingsService {
       const date = updateBookingDto.bookingDate || booking.bookingDate;
       const time = updateBookingDto.bookingTime || booking.bookingTime;
 
-      // Validate date is not in the past
+      // Validate date & time is not in the past
       const todayStr = new Date().toLocaleDateString('en-CA');
       if (date < todayStr) {
         throw new BadRequestException('Rescheduled date cannot be in the past');
+      }
+      if (date === todayStr) {
+        const now = new Date();
+        const currentHour = now.getHours().toString().padStart(2, '0');
+        const currentMin = now.getMinutes().toString().padStart(2, '0');
+        const currentTimeStr = `${currentHour}:${currentMin}`;
+        if (time < currentTimeStr) {
+          throw new BadRequestException('Rescheduled time slot cannot be in the past');
+        }
       }
 
       // Check slot availability

@@ -42,7 +42,7 @@ export const MyBookings: React.FC = () => {
   const [rescheduling, setRescheduling] = useState(false);
 
   // Generate timeslots from 09:00 to 17:30
-  const timeSlots = [];
+  const timeSlots: string[] = [];
   for (let hour = 9; hour < 18; hour++) {
     const hh = hour.toString().padStart(2, '0');
     timeSlots.push(`${hh}:00`);
@@ -50,6 +50,17 @@ export const MyBookings: React.FC = () => {
   }
 
   const today = new Date().toLocaleDateString('en-CA');
+
+  const getFilteredTimeSlots = () => {
+    if (rescheduleDate === today) {
+      const now = new Date();
+      const currentHour = now.getHours().toString().padStart(2, '0');
+      const currentMin = now.getMinutes().toString().padStart(2, '0');
+      const currentTimeStr = `${currentHour}:${currentMin}`;
+      return timeSlots.filter(slot => slot >= currentTimeStr);
+    }
+    return timeSlots;
+  };
 
   // Fetch bookings when page, search query, or status filter changes
   useEffect(() => {
@@ -344,7 +355,7 @@ export const MyBookings: React.FC = () => {
                   value={rescheduleTime}
                   onChange={e => setRescheduleTime(e.target.value)}
                 >
-                  {timeSlots.map(t => (
+                  {getFilteredTimeSlots().map(t => (
                     <option key={t} value={t}>{t}</option>
                   ))}
                 </select>

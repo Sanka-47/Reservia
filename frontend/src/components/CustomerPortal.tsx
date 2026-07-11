@@ -85,7 +85,7 @@ export const CustomerPortal: React.FC<CustomerPortalProps> = ({ onRequireLogin }
   const [submitting, setSubmitting] = useState(false);
 
   // Generate 30-minute interval timeslots from 09:00 to 17:30
-  const timeSlots = [];
+  const timeSlots: string[] = [];
   for (let hour = 9; hour < 18; hour++) {
     const hh = hour.toString().padStart(2, '0');
     timeSlots.push(`${hh}:00`);
@@ -94,6 +94,17 @@ export const CustomerPortal: React.FC<CustomerPortalProps> = ({ onRequireLogin }
 
   // Set min date to today's date in YYYY-MM-DD format
   const today = new Date().toLocaleDateString('en-CA');
+
+  const getFilteredTimeSlots = () => {
+    if (date === today) {
+      const now = new Date();
+      const currentHour = now.getHours().toString().padStart(2, '0');
+      const currentMin = now.getMinutes().toString().padStart(2, '0');
+      const currentTimeStr = `${currentHour}:${currentMin}`;
+      return timeSlots.filter(slot => slot >= currentTimeStr);
+    }
+    return timeSlots;
+  };
 
   useEffect(() => {
     fetchServices();
@@ -407,7 +418,7 @@ export const CustomerPortal: React.FC<CustomerPortalProps> = ({ onRequireLogin }
                     onChange={e => setTime(e.target.value)}
                   >
                     <option value="">Select a time</option>
-                    {timeSlots.map(t => (
+                    {getFilteredTimeSlots().map(t => (
                       <option key={t} value={t}>{t}</option>
                     ))}
                   </select>
