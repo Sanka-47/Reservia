@@ -41,10 +41,6 @@ let ServicesService = class ServicesService {
         Object.assign(service, updateServiceDto);
         return this.servicesRepository.save(service);
     }
-    async remove(id) {
-        const service = await this.findOne(id);
-        await this.servicesRepository.remove(service);
-    }
 };
 exports.ServicesService = ServicesService;
 exports.ServicesService = ServicesService = __decorate([

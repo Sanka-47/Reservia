@@ -9,5 +9,4 @@ export declare class ServicesService {
     findAll(): Promise<Service[]>;
     findOne(id: string): Promise<Service>;
     update(id: string, updateServiceDto: UpdateServiceDto): Promise<Service>;
-    remove(id: string): Promise<void>;
 }
