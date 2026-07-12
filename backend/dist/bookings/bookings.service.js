@@ -172,6 +172,7 @@ let BookingsService = class BookingsService {
             }
             booking.bookingDate = date;
             booking.bookingTime = time;
+            booking.status = booking_entity_1.BookingStatus.PENDING;
         }
         if (updateBookingDto.notes !== undefined) {
             booking.notes = updateBookingDto.notes;
