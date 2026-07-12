@@ -222,4 +222,45 @@ describe('BookingsService', () => {
       expect(result.status).toBe(BookingStatus.CONFIRMED);
     });
   });
+
+  describe('update', () => {
+    it('should throw BadRequestException if trying to edit CANCELLED booking', async () => {
+      const existingBooking = {
+        id: 'booking-id',
+        customerName: 'John Doe',
+        userId: 'user-uuid-123',
+        status: BookingStatus.CANCELLED,
+      };
+      mockBookingRepository.findOne.mockResolvedValue(existingBooking);
+
+      await expect(
+        service.update('booking-id', { customerName: 'New Name' }, mockUser),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should successfully update date/time and set status to PENDING', async () => {
+      const existingBooking = {
+        id: 'booking-id',
+        customerName: 'John Doe',
+        userId: 'user-uuid-123',
+        status: BookingStatus.CONFIRMED,
+        bookingDate: '2026-08-10',
+        bookingTime: '10:00',
+        serviceId: 'service-id',
+      };
+      mockBookingRepository.findOne
+        .mockResolvedValueOnce(existingBooking)
+        .mockResolvedValueOnce(null);
+      mockBookingRepository.save.mockImplementation((b) => Promise.resolve(b));
+
+      const result = await service.update(
+        'booking-id',
+        { bookingDate: '2026-08-11', bookingTime: '11:00' },
+        mockUser,
+      );
+      expect(result.bookingDate).toBe('2026-08-11');
+      expect(result.bookingTime).toBe('11:00');
+      expect(result.status).toBe(BookingStatus.PENDING);
+    });
+  });
 });

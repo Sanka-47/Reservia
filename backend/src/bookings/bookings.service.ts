@@ -248,6 +248,7 @@ export class BookingsService {
 
       booking.bookingDate = date;
       booking.bookingTime = time;
+      booking.status = BookingStatus.PENDING;
     }
 
     if (updateBookingDto.notes !== undefined) {
